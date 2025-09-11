@@ -1,32 +1,36 @@
 <?php
-// index.php — public home page (features blocked unless logged in)
+// index.php — home; hero uses local main_background.jpg; no online fallbacks
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 $isLoggedIn = !empty($_SESSION['user_email']);
 
-// Discover product photos (randomize)
+// discover up to 6 product images (no external replacements)
 $imgDir  = __DIR__ . '/img/products';
 $webDir  = 'img/products';
 $allowed = ['jpg','jpeg','png','webp'];
-$photos  = [];
 
+$files = [];
 if (is_dir($imgDir)) {
-    foreach (scandir($imgDir) as $f) {
-        $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-        if (in_array($ext, $allowed)) {
-            $name = pathinfo($f, PATHINFO_FILENAME);
-            $photos[] = [
-                'src'   => $webDir . '/' . rawurlencode($f),
-                'name'  => ucwords(str_replace(['-','_'],' ', $name)),
-            ];
-        }
-    }
+  foreach (scandir($imgDir) as $f) {
+    $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+    if (in_array($ext, $allowed)) { $files[] = $f; }
+  }
 }
-if (empty($photos)) {
-    for ($i=1; $i<=8; $i++) {
-        $photos[] = ['src'=>"https://picsum.photos/seed/flowers$i/600/600",'name'=>"Bouquet $i"];
-    }
+sort($files, SORT_NATURAL);
+$files = array_slice($files, 0, 6);
+
+$photos = [];
+foreach ($files as $f) {
+  $name = pathinfo($f, PATHINFO_FILENAME);
+  $photos[] = [
+    'src'  => $webDir . '/' . rawurlencode($f),
+    'name' => ucwords(str_replace(['-','_'], ' ', $name)),
+  ];
 }
-shuffle($photos);
+
+// pad to exactly 6 with placeholders (no src)
+while (count($photos) < 6) {
+  $photos[] = ['src' => null, 'name' => 'Image coming soon'];
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -41,34 +45,26 @@ shuffle($photos);
 
   <?php include __DIR__ . '/nav.php'; ?>
 
-  <header class="hero py-5">
-    <div class="container">
-      <div class="row align-items-center g-4">
-        <div class="col-lg-6">
-          <span class="badge badge-soft rounded-pill px-3 py-2 mb-3">Kuching • Sarawak</span>
-          <h1 class="display-5 brand-mark">Root Flowers</h1>
-          <p class="lead">
-            Warm bouquets and bespoke arrangements—made with care for birthdays, proposals,
-            and every little celebration in between.
-          </p>
-
-          <!-- EXACTLY 3 buttons required by the brief -->
-          <div class="cta-row">
-            <a class="btn btn-dark" href="main_menu.php" data-require-login="1">🌸 Main Menu</a>
-            <a class="btn btn-outline-dark" href="login.php">Login</a>
-            <a class="btn btn-outline-secondary" href="registration.php">Register</a>
-          </div>
-        </div>
-
-        <div class="col-lg-6">
-          <div class="alert alert-warning border-0" role="alert">
-            Tip: Use the search box (top-right) to filter bouquets by name.
+  <!-- HERO with your own background image -->
+  <header class="hero hero-with-image py-5">
+    <div class="hero-overlay"></div>
+    <div class="container position-relative">
+      <div class="row align-items-center">
+        <div class="col-lg-7">
+          <div class="glass p-4 p-md-5 rounded-4">
+            <h1 class="display-5 brand-mark mb-3">Root Flowers</h1>
+            <p class="lead mb-4">
+              Crafting warm, memorable moments with Sarawak’s loveliest blooms — for birthdays,
+              proposals, and everyday kindness.
+            </p>
+            <a class="btn btn-dark btn-lg btn-cta" href="main_menu.php" data-require-login="1">🌸 Main Menu</a>
           </div>
         </div>
       </div>
     </div>
   </header>
 
+  <!-- PRODUCT GRID (exactly 6 tiles; placeholders if missing) -->
   <main class="py-5">
     <div class="container">
       <div class="section-head">
@@ -82,24 +78,35 @@ shuffle($photos);
 
       <div id="grid" class="row g-4">
         <?php foreach ($photos as $p): ?>
-          <div class="col-6 col-md-4 col-lg-3 product" data-name="<?php echo htmlspecialchars($p['name']); ?>">
-            <div class="card photo-card h-100">
-              <img src="<?php echo htmlspecialchars($p['src']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($p['name']); ?>">
-              <div class="card-body d-flex flex-column">
-                <h3 class="h6 card-title mb-0"><?php echo htmlspecialchars($p['name']); ?></h3>
+          <div class="col-6 col-md-4">
+            <article class="card photo-card h-100 hover-lift">
+              <?php if (!empty($p['src'])): ?>
+                <div class="img-wrap">
+                  <img src="<?php echo htmlspecialchars($p['src']); ?>" class="card-img-top"
+                       alt="<?php echo htmlspecialchars($p['name']); ?>">
+                </div>
+              <?php else: ?>
+                <div class="img-wrap placeholder-tile d-flex align-items-center justify-content-center">
+                  <span class="placeholder-text">Image coming soon</span>
+                </div>
+              <?php endif; ?>
+              <div class="card-body">
+                <h3 class="h6 card-title mb-0 text-truncate" title="<?php echo htmlspecialchars($p['name']); ?>">
+                  <?php echo htmlspecialchars($p['name']); ?>
+                </h3>
               </div>
-            </div>
+            </article>
           </div>
         <?php endforeach; ?>
       </div>
 
-      <div class="divider my-5"></div>
+      <div class="divider my-5" role="separator" aria-hidden="true"></div>
 
       <div class="row g-4 align-items-center">
         <div class="col-lg-7">
           <h2 class="h5 mb-2">Workshops with heart</h2>
           <p class="mb-0">
-            Learn to hand-tie, style, and care for your blooms. Cozy small classes, friendly instructors,
+            Learn to hand-tie, style, and care for your blooms. Small classes, friendly instructors,
             and tea on the side. Dates available after login from the main menu.
           </p>
         </div>
@@ -114,32 +121,17 @@ shuffle($photos);
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // expose login state to JS
+    // gate protected links
     const IS_LOGGED_IN = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
-
-    // Client-side guard: any link with data-require-login will be blocked if not logged in
-    document.querySelectorAll('[data-require-login]').forEach(a => {
-      a.addEventListener('click', (e) => {
+    document.querySelectorAll('[data-require-login]').forEach(el => {
+      el.addEventListener('click', (e) => {
         if (!IS_LOGGED_IN) {
           e.preventDefault();
-          const goto = a.getAttribute('href') || 'main_menu.php';
-          // redirect to login with a next param so we can bounce back post-login
-          window.location.href = 'login.php?next=' + encodeURIComponent(goto);
+          const next = el.getAttribute('href') || 'main_menu.php';
+          window.location.href = 'login.php?next=' + encodeURIComponent(next);
         }
       });
     });
-
-    // Search filter on home grid (bonus UX)
-    const q = document.getElementById('q');
-    if (q) {
-      q.addEventListener('input', function(){
-        const term = this.value.toLowerCase();
-        document.querySelectorAll('.product').forEach(card => {
-          const name = (card.getAttribute('data-name') || '').toLowerCase();
-          card.style.display = name.includes(term) ? '' : 'none';
-        });
-      });
-    }
   </script>
 </body>
 </html>
