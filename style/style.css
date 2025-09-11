@@ -1,0 +1,54 @@
+/* style/style.css */
+
+/* Base */
+body {
+  background: linear-gradient(180deg, #fff7f9, #ffffff);
+  color: #4a3b3b;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+.btn, .form-control { border-radius: 12px; }
+.btn-dark:hover, .btn-outline-dark:hover { transform: translateY(-1px); }
+
+/* Hero */
+.hero {
+  background: radial-gradient(900px 500px at 15% 0%, #ffe2e8 0, rgba(255,226,232,0) 60%);
+  border-bottom: 1px solid #f4dbe0;
+}
+.brand-mark { font-weight: 800; letter-spacing: .5px; }
+.badge-soft {
+  background: #fff;
+  border: 1px dashed #e9c6c9;
+  color: #a35562;
+}
+.cta-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem; }
+
+/* Section head */
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: .75rem; gap: 1rem; flex-wrap: wrap;
+}
+
+/* Chips */
+.chips { display: flex; gap: .5rem; }
+.chip {
+  font-size: .75rem; background: #fff4f6; border: 1px solid #f4dbe0;
+  padding: .25rem .5rem; border-radius: 999px;
+}
+
+/* Cards / Grid */
+.photo-card { border: 0; box-shadow: 0 8px 24px rgba(173, 102, 115, .12); }
+.photo-card img { aspect-ratio: 1/1; object-fit: cover; border-radius: .75rem; }
+
+/* Divider */
+.divider { height: 1px; background: linear-gradient(90deg, transparent, #f0d6da, transparent); }
+
+/* Navbar */
+.navbar .nav-link.disabled { opacity: .55; pointer-events: auto; cursor: not-allowed; }
+
+/* Footer */
+footer { background: #fdfdfd; }
+footer h5, footer h6 { color: #7a3f49; }
+.foot-bottom {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem;
+}
+.foot-bottom .links { display: flex; gap: 1rem; }
