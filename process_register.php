@@ -1,50 +1,47 @@
 <?php
-// COS30020/process_register.php — Task 10
-// Validates input, writes to xampp/data/User/user.txt, shows errors or redirects to login
-
+// process_register.php — validates, writes to xampp/data/User/user.txt, redirects or shows errors
 session_start();
 
-// -------- Storage helpers (xampp/data/User/user.txt) --------
-function rf_user_file(): string {
-  // parent of htdocs (e.g., C:\xampp or /opt/lampp)
-  $xamppRoot = dirname($_SERVER['DOCUMENT_ROOT']);
-  return rtrim($xamppRoot, '/\\') . '/data/User/user.txt';
+/* ---- Where to store the TXT (xampp/data/User/user.txt) ---- */
+function user_file_path(): string {
+  // parent of htdocs (C:\xampp on Windows; /opt/lampp on Linux)
+  $root = dirname($_SERVER['DOCUMENT_ROOT']);
+  return rtrim($root, '/\\') . '/data/User/user.txt';
 }
-function rf_ensure_store(): void {
-  $file = rf_user_file();
+function ensure_user_store(): void {
+  $file = user_file_path();
   $dir  = dirname($file);
-  if (!is_dir($dir)) { mkdir($dir, 0777, true); }
-  if (!file_exists($file)) { touch($file); }
+  if (!is_dir($dir)) { mkdir($dir, 0777, true); } // auto-create /data/User
+  if (!file_exists($file)) { touch($file); }      // auto-create user.txt
 }
 
-// -------- Validation helpers --------
+/* ---- Validation helpers ---- */
 function clean($s){ return trim($s ?? ''); }
 function valid_name($s){ return (bool)preg_match('/^[A-Za-z ]+$/', $s); }
 function valid_email($s){ return (bool)filter_var($s, FILTER_VALIDATE_EMAIL); }
 function valid_password($s){
-  return strlen($s) >= 8 && preg_match('/\d/', $s) && preg_match('/[^A-Za-z0-9]/', $s);
+  return strlen($s) >= 8 && preg_match('/\d/',$s) && preg_match('/[^A-Za-z0-9]/',$s);
 }
 function email_exists($email): bool {
-  $file = rf_user_file();
+  $file = user_file_path();
   if (!file_exists($file)) return false;
-  $fp = fopen($file, 'r');
-  if (!$fp) return false;
+  $fh = fopen($file, 'r'); if(!$fh) return false;
   $exists = false;
-  while (($line = fgets($fp)) !== false) {
+  while (($line = fgets($fh)) !== false) {
     if (preg_match('/\bEmail:([^|]+)/', $line, $m)) {
       if (strcasecmp(trim($m[1]), $email) === 0) { $exists = true; break; }
     }
   }
-  fclose($fp);
+  fclose($fh);
   return $exists;
 }
 
-// -------- Only accept POST from registration.php --------
+/* ---- POST only ---- */
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   header('Location: registration.php'); exit;
 }
 
-// -------- Collect inputs --------
+/* ---- Collect fields ---- */
 $first   = clean($_POST['first_name'] ?? '');
 $last    = clean($_POST['last_name'] ?? '');
 $dob     = clean($_POST['dob'] ?? '');
@@ -54,108 +51,61 @@ $town    = clean($_POST['hometown'] ?? '');
 $pass    = clean($_POST['password'] ?? '');
 $confirm = clean($_POST['confirm_password'] ?? '');
 
-// -------- Validate --------
+/* ---- Validate ---- */
 $errors = [];
 if ($first===''||$last===''||$dob===''||$gender===''||$email===''||$town===''||$pass===''||$confirm==='') {
-  $errors[] = 'All fields are mandatory.';
+  $errors[]='All fields are mandatory.';
 }
-if ($first && !valid_name($first))   $errors[] = 'First name should contain alphabets and spaces only.';
-if ($last  && !valid_name($last))    $errors[] = 'Last name should contain alphabets and spaces only.';
-if ($email && !valid_email($email))  $errors[] = 'Email format is invalid.';
-if ($pass  && !valid_password($pass))$errors[] = 'Password must have at least 8 characters, with at least 1 number and 1 symbol.';
-if ($pass !== $confirm)              $errors[] = 'Confirm password must be the same as password.';
+if ($first && !valid_name($first))    $errors[]='First name should contain alphabets and spaces only.';
+if ($last  && !valid_name($last))     $errors[]='Last name should contain alphabets and spaces only.';
+if ($email && !valid_email($email))   $errors[]='Email format is invalid.';
+if ($pass  && !valid_password($pass)) $errors[]='Password must have at least 8 characters, with at least 1 number and 1 symbol.';
+if ($pass !== $confirm)               $errors[]='Confirm password must be the same as password.';
 
-// -------- Uniqueness (email) --------
-rf_ensure_store();
+/* ---- Ensure store & uniqueness ---- */
+ensure_user_store();
 if ($email && email_exists($email)) {
-  $errors[] = 'There is an existing account.';
+  $errors[]='There is an existing account.';
 }
 
-// -------- On error: render a page with Bootstrap styling (no write) --------
-if (!empty($errors)) {
+/* ---- If errors: show them (Bootstrap) ---- */
+if ($errors) {
   ?>
-  <!doctype html>
+  <!DOCTYPE html>
   <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Registration — Errors</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="style/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style/style.css" />
   </head>
   <body>
     <?php if (file_exists(__DIR__.'/nav.php')) include __DIR__.'/nav.php'; ?>
 
+    <header class="page-header">
+      <div class="container">
+        <h1>Registration Form</h1>
+        <p>Please fix the errors below and submit again.</p>
+      </div>
+    </header>
+
     <main class="py-5">
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-lg-7">
-            <div class="card border-0 shadow-sm">
-              <div class="card-body p-4 p-md-5">
-                <h1 class="h4 mb-3">Registration Form</h1>
-
-                <div class="alert alert-danger mb-4">
+          <div class="col-lg-8">
+            <div class="card register-card">
+              <div class="card-body">
+                <div class="alert alert-danger">
                   <strong>We couldn’t submit your form.</strong>
                   <ul class="mb-0">
                     <?php foreach ($errors as $e): ?>
-                      <li><?php echo htmlspecialchars($e, ENT_QUOTES); ?></li>
+                      <li><?= htmlspecialchars($e, ENT_QUOTES) ?></li>
                     <?php endforeach; ?>
                   </ul>
                 </div>
 
-                <!-- Re-show the form values so user can fix them quickly -->
-                <form action="process_register.php" method="post" novalidate>
-                  <div class="row g-3">
-                    <div class="col-md-6">
-                      <label class="form-label">First Name</label>
-                      <input type="text" class="form-control" name="first_name" value="<?php echo htmlspecialchars($first); ?>">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Last Name</label>
-                      <input type="text" class="form-control" name="last_name" value="<?php echo htmlspecialchars($last); ?>">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Date of Birth</label>
-                      <input type="date" class="form-control" name="dob" value="<?php echo htmlspecialchars($dob); ?>">
-                    </div>
-                    <div class="col-md-6">
-                      <span class="form-label d-block">Gender</span>
-                      <div class="d-flex gap-4 pt-1">
-                        <div class="form-check">
-                          <input class="form-check-input" type="radio" name="gender" id="gF" value="Female" <?php echo ($gender==='Female'?'checked':''); ?>>
-                          <label class="form-check-label" for="gF">Female</label>
-                        </div>
-                        <div class="form-check">
-                          <input class="form-check-input" type="radio" name="gender" id="gM" value="Male" <?php echo ($gender==='Male'?'checked':''); ?>>
-                          <label class="form-check-label" for="gM">Male</label>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Email (Text input)</label>
-                      <input type="text" class="form-control" name="email" value="<?php echo htmlspecialchars($email); ?>">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Hometown</label>
-                      <input type="text" class="form-control" name="hometown" value="<?php echo htmlspecialchars($town); ?>">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Password (Text input)</label>
-                      <input type="text" class="form-control" name="password" value="<?php echo htmlspecialchars($pass); ?>">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Confirm Password (Text input)</label>
-                      <input type="text" class="form-control" name="confirm_password" value="<?php echo htmlspecialchars($confirm); ?>">
-                    </div>
-                  </div>
-
-                  <div class="d-flex gap-2 pt-4">
-                    <button type="submit" name="submit" class="btn btn-dark">Submit Form</button>
-                    <button type="reset" class="btn btn-outline-dark">Reset Form</button>
-                    <a href="login.php" class="btn btn-secondary">Back to Login</a>
-                  </div>
-                </form>
-
+                <a class="btn btn-dark" href="registration.php">Back to Registration</a>
               </div>
             </div>
           </div>
@@ -171,18 +121,19 @@ if (!empty($errors)) {
   exit;
 }
 
-// -------- Save to TXT (exact format + newline) --------
-$dob_fmt = preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob) ? date('d-m-Y', strtotime($dob)) : $dob;
-$line = 'First Name:'.$first
-      . '|Last Name:'.$last
-      . '|DOB:'.$dob_fmt
-      . '|Gender:'.$gender
-      . '|Email:'.$email
-      . '|Hometown:'.$town
-      . '|Password:'.$pass;
+/* ---- Save to TXT (exact format) ---- */
+$dob_fmt = preg_match('/^\d{4}-\d{2}-\d{2}$/',$dob) ? date('d-m-Y', strtotime($dob)) : $dob;
 
-file_put_contents(rf_user_file(), $line . PHP_EOL, FILE_APPEND);
+$record = 'First Name:'.$first
+        . '|Last Name:'.$last
+        . '|DOB:'.$dob_fmt
+        . '|Gender:'.$gender
+        . '|Email:'.$email
+        . '|Hometown:'.$town
+        . '|Password:'.$pass;
 
-// -------- Success: redirect to Login --------
+file_put_contents(user_file_path(), $record.PHP_EOL, FILE_APPEND);
+
+/* ---- Success: redirect to login ---- */
 header('Location: login.php?registered=1');
 exit;
