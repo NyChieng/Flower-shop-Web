@@ -1,5 +1,4 @@
 <?php
-// login.php — reads xampp/data/User/user.txt, authenticates, sets session, redirects
 session_start();
 
 function user_file_path(): string {
@@ -16,35 +15,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login_error = 'Please enter both email and password.';
   } else {
     $file = user_file_path();
-    if (file_exists($file)) {
-      $fh = fopen($file, 'r');
-      if ($fh) {
-        $ok = false; $user = [];
-        while (($line = fgets($fh)) !== false) {
-          $parts = array_map('trim', explode('|', $line));
-          $fields = [];
-          foreach ($parts as $p) {
-            $kv = explode(':', $p, 2);
-            if (count($kv) === 2) $fields[trim($kv[0])] = trim($kv[1]);
-          }
-          if (isset($fields['Email'], $fields['Password'])
-              && strcasecmp($fields['Email'], $email) === 0
-              && $fields['Password'] === $password) {
-            $ok = true; $user = $fields; break;
-          }
+    if (file_exists($file) && ($fh = fopen($file, 'r'))) {
+      $ok = false; $user = [];
+      while (($line = fgets($fh)) !== false) {
+        $parts  = array_map('trim', explode('|', $line));
+        $fields = [];
+        foreach ($parts as $p) {
+          $kv = explode(':', $p, 2);
+          if (count($kv) === 2) $fields[trim($kv[0])] = trim($kv[1]);
         }
-        fclose($fh);
+        if (isset($fields['Email'], $fields['Password'])
+            && strcasecmp($fields['Email'], $email) === 0
+            && $fields['Password'] === $password) {
+          $ok = true; $user = $fields; break;
+        }
+      }
+      fclose($fh);
 
-        if ($ok) {
-          $_SESSION['user_email'] = $user['Email'];
-          $_SESSION['user_name']  = trim(($user['First Name'] ?? '').' '.($user['Last Name'] ?? ''));
-          header('Location: index.php'); // or main_menu.php
-          exit;
-        } else {
-          $login_error = 'Invalid email or password.';
-        }
+      if ($ok) {
+        $_SESSION['user_email'] = $user['Email'];
+        $_SESSION['user_name']  = trim(($user['First Name'] ?? '').' '.($user['Last Name'] ?? ''));
+        header('Location: index.php');
+        exit;
       } else {
-        $login_error = 'System error opening user store.';
+        $login_error = 'Invalid email or password.';
       }
     } else {
       $login_error = 'No users registered yet.';
@@ -61,28 +55,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="style/style.css" />
 </head>
-<body>
+<body class="layout-page">
+
   <?php include __DIR__ . '/nav.php'; ?>
 
   <header class="page-header">
     <div class="container">
       <h1>Login</h1>
-      <?php if (isset($_GET['registered'])): ?>
-        <p>Account created. Please login.</p>
-      <?php else: ?>
-        <p>Enter your email and password.</p>
-      <?php endif; ?>
+      <p><?php echo isset($_GET['registered']) ? 'Account created. Please login.' : 'Enter your email and password.'; ?></p>
     </div>
   </header>
 
-  <main class="py-5">
+  <main class="content-grow py-5">
     <div class="container">
       <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-          <div class="card register-card">
-            <div class="card-body">
+        <div class="col-md-7 col-lg-6 col-xl-5">
+          <div class="card auth-card">
+            <div class="card-body p-4 p-md-5">
               <?php if ($login_error): ?>
-                <div class="alert alert-danger"><?= htmlspecialchars($login_error, ENT_QUOTES) ?></div>
+                <div class="alert alert-danger mb-4"><?php echo htmlspecialchars($login_error, ENT_QUOTES); ?></div>
               <?php endif; ?>
 
               <form action="login.php" method="post" novalidate>
@@ -108,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </main>
 
   <?php include __DIR__ . '/footer.php'; ?>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

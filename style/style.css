@@ -358,3 +358,72 @@ header.page-header p {
     border-radius: .6rem;
     padding: .6rem 1.1rem;
 }
+
+
+/* ===== Auth pages layout (reusable, no inline) ===== */
+
+.layout-page {
+    min-height: 100dvh;
+    /* fill viewport, mobile-safe unit */
+    display: flex;
+    flex-direction: column;
+}
+
+.content-grow {
+    flex: 1 0 auto;
+    /* push footer down */
+}
+
+
+/* Slim header shared with registration */
+
+header.page-header {
+    background: linear-gradient(180deg, #fff 0%, #fff6f7 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
+    padding: 2rem 0;
+}
+
+header.page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: .25rem;
+    letter-spacing: .2px;
+}
+
+header.page-header p {
+    margin: 0;
+    color: #6c757d;
+}
+
+
+/* Auth card look */
+
+.auth-card {
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, .08);
+    background: #fff;
+}
+
+.auth-card .form-control {
+    border-radius: .6rem;
+    height: 44px;
+}
+
+.auth-card .form-control:focus {
+    border-color: #adb5bd;
+    box-shadow: 0 0 0 .2rem rgba(0, 0, 0, .05);
+}
+
+.auth-card .btn {
+    border-radius: .6rem;
+    padding: .6rem 1.1rem;
+}
+
+
+/* Footer a touch wider/anchored */
+
+footer.site-footer {
+    border-top: 1px solid rgba(0, 0, 0, .08);
+    background: #f7f7f8;
+}
