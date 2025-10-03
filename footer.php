@@ -14,12 +14,12 @@
         <div class="d-flex flex-wrap gap-2">
           <a class="btn btn-success" target="_blank" rel="noopener"
              href="https://api.whatsapp.com/send?phone=60143399709" aria-label="WhatsApp">
-            💬 WhatsApp
+            <i class="bi bi-whatsapp"></i> WhatsApp
           </a>
           <!-- TODO: replace with your actual handle -->
           <a class="btn btn-outline-dark" target="_blank" rel="noopener"
              href="https://instagram.com/rootflowers" aria-label="Instagram">
-            📷 Instagram
+           <i class="bi bi-instagram"></i> Instagram
           </a>
         </div>
       </div>
