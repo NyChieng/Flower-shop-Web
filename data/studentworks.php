@@ -1,0 +1,43 @@
+<?php
+return [
+    [
+        'id' => 'orchid-elegance',
+        'title' => 'Orchid elegance cascade',
+        'student' => 'Amelia Tan',
+        'workshop' => 'Orchid Care Masterclass',
+        'captured_at' => '2025-08-18',
+        'medium' => 'image',
+        'media' => 'img/products/product_1.jpg',
+        'description' => 'A cascading phalaenopsis arrangement created during Week 4 of the Orchid Care Masterclass, featuring hand-wired stems and moss-wrapped roots.',
+    ],
+    [
+        'id' => 'petal-geometry',
+        'title' => 'Petal geometry centerpiece',
+        'student' => 'Hazim Ariff',
+        'workshop' => 'Modern Tablescapes',
+        'captured_at' => '2025-09-04',
+        'medium' => 'image',
+        'media' => 'img/products/product_4.jpg',
+        'description' => 'An asymmetrical centrepiece balancing reflexed roses, tulips, and pampas textures prepared during the Modern Tablescapes intensive.',
+    ],
+    [
+        'id' => 'sunset-story',
+        'title' => 'Sunset story bouquet',
+        'student' => 'Priya Nadee',
+        'workshop' => 'Hand-tied Bouquet Lab',
+        'captured_at' => '2025-09-12',
+        'medium' => 'image',
+        'media' => 'img/products/product_6.jpg',
+        'description' => 'Warm-toned bouquet using spiral binding, created as the assessment piece for the Hand-tied Bouquet Lab.',
+    ],
+    [
+        'id' => 'terrarium-lullaby',
+        'title' => 'Terrarium lullaby',
+        'student' => 'Li Wei Ng',
+        'workshop' => 'Closed Terrarium Study',
+        'captured_at' => '2025-09-20',
+        'medium' => 'image',
+        'media' => 'img/products/product_9.jpg',
+        'description' => 'Layered mosses, baby tears, and miniature fittonia arranged within a sealed glass vessel to demonstrate humidity control.',
+    ],
+];

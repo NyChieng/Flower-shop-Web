@@ -1,49 +1,74 @@
 <?php
 session_start();
 
-function user_file_path(): string {
-  $root = dirname($_SERVER['DOCUMENT_ROOT']);
-  return rtrim($root, '/\\') . '/data/User/user.txt';
+function user_file_path(): string
+{
+    $root = dirname($_SERVER['DOCUMENT_ROOT']);
+    return rtrim($root, '/\\') . '/data/User/user.txt';
 }
 
-$login_error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $email = trim($_POST['email'] ?? '');
-  $password = trim($_POST['password'] ?? '');
-
-  if ($email === '' || $password === '') {
-    $login_error = 'Please enter both email and password.';
-  } else {
-    $file = user_file_path();
-    if (file_exists($file) && ($fh = fopen($file, 'r'))) {
-      $ok = false; $user = [];
-      while (($line = fgets($fh)) !== false) {
-        $parts  = array_map('trim', explode('|', $line));
-        $fields = [];
-        foreach ($parts as $p) {
-          $kv = explode(':', $p, 2);
-          if (count($kv) === 2) $fields[trim($kv[0])] = trim($kv[1]);
-        }
-        if (isset($fields['Email'], $fields['Password'])
-            && strcasecmp($fields['Email'], $email) === 0
-            && $fields['Password'] === $password) {
-          $ok = true; $user = $fields; break;
-        }
-      }
-      fclose($fh);
-
-      if ($ok) {
-        $_SESSION['user_email'] = $user['Email'];
-        $_SESSION['user_name']  = trim(($user['First Name'] ?? '').' '.($user['Last Name'] ?? ''));
-        header('Location: index.php');
-        exit;
-      } else {
-        $login_error = 'Invalid email or password.';
-      }
-    } else {
-      $login_error = 'No users registered yet.';
+function sanitize_redirect(string $target): string
+{
+    if ($target === '') {
+        return 'index.php';
     }
-  }
+    if (preg_match('/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i', $target)) {
+        return 'index.php';
+    }
+    return ltrim($target, '/');
+}
+
+$flash = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
+
+$redirect = sanitize_redirect($_GET['redirect'] ?? ($_POST['redirect'] ?? 'index.php'));
+$email = trim($_POST['email'] ?? '');
+$login_error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $password = trim($_POST['password'] ?? '');
+
+    if ($email === '' || $password === '') {
+        $login_error = 'Please enter both email and password.';
+    } else {
+        $file = user_file_path();
+        if (file_exists($file) && ($fh = fopen($file, 'r'))) {
+            $ok = false;
+            $user = [];
+            while (($line = fgets($fh)) !== false) {
+                $parts  = array_map('trim', explode('|', $line));
+                $fields = [];
+                foreach ($parts as $p) {
+                    $kv = explode(':', $p, 2);
+                    if (count($kv) === 2) {
+                        $fields[trim($kv[0])] = trim($kv[1]);
+                    }
+                }
+                if (isset($fields['Email'], $fields['Password'])
+                    && strcasecmp($fields['Email'], $email) === 0
+                    && $fields['Password'] === $password) {
+                    $ok = true;
+                    $user = $fields;
+                    break;
+                }
+            }
+            fclose($fh);
+
+            if ($ok) {
+                $_SESSION['user_email'] = $user['Email'];
+                $_SESSION['user_name']  = trim(($user['First Name'] ?? '') . ' ' . ($user['Last Name'] ?? ''));
+                $_SESSION['first_name'] = $user['First Name'] ?? null;
+                $_SESSION['last_name']  = $user['Last Name'] ?? null;
+
+                header('Location: ' . $redirect);
+                exit;
+            }
+
+            $login_error = 'Invalid email or password.';
+        } else {
+            $login_error = 'No users registered yet.';
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -51,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login â€¢ Root Flowers</title>
+  <title>Login · Root Flowers</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="style/style.css" />
@@ -73,14 +98,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="col-md-7 col-lg-6 col-xl-5">
           <div class="card auth-card">
             <div class="card-body p-4 p-md-5">
+              <?php if ($flash): ?>
+                <div class="alert alert-info mb-4"><?php echo htmlspecialchars($flash, ENT_QUOTES); ?></div>
+              <?php endif; ?>
               <?php if ($login_error): ?>
                 <div class="alert alert-danger mb-4"><?php echo htmlspecialchars($login_error, ENT_QUOTES); ?></div>
               <?php endif; ?>
 
               <form action="login.php" method="post" novalidate>
+                <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($redirect, ENT_QUOTES); ?>" />
                 <div class="mb-3">
                   <label class="form-label" for="email">Email address</label>
-                  <input class="form-control" type="email" id="email" name="email" required>
+                  <input class="form-control" type="email" id="email" name="email" required value="<?php echo htmlspecialchars($email, ENT_QUOTES); ?>">
                 </div>
                 <div class="mb-3">
                   <label class="form-label" for="password">Password</label>
