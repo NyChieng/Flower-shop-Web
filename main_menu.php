@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_login();
-
+startSessionIfNeeded();
+$isLoggedIn = currentUser() !== null;
 $firstName = $_SESSION['first_name'] ?? ($_SESSION['user_name'] ?? 'Friend');
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
@@ -18,8 +18,8 @@ $portalCards = [
         'icon' => 'P',
         'title' => 'Products',
         'text'  => 'Explore bouquet categories, sample arrangements, and pricing notes.',
-        'tag'   => 'Req-2',
-        'meta'  => 'Always available once logged in',
+        'tag'   => 'Catalogue',
+        'meta'  => 'Browse bouquets anytime',
         'href'  => 'products.php',
         'cta'   => 'Go to products',
     ],
@@ -28,17 +28,27 @@ $portalCards = [
         'icon' => 'W',
         'title' => 'Workshops',
         'text'  => 'Review workshop types, availability, venues, and logistics details.',
-        'tag'   => 'Req-4',
-        'meta'  => 'Workshop schedules ready for screenshots',
+        'tag'   => 'Workshops',
+        'meta'  => 'Hands-on sessions every month',
         'href'  => 'workshops.php',
         'cta'   => 'View workshops',
+    ],
+    [
+        'label' => 'Profile',
+        'icon' => 'U',
+        'title' => 'Student profile',
+        'text'  => 'Check your student declaration and update personal information.',
+        'tag'   => 'Profile',
+        'meta'  => 'Keeps your Swinburne details current',
+        'href'  => 'update_profile.php',
+        'cta'   => 'View profile',
     ],
     [
         'label' => 'Showcase',
         'icon' => 'S',
         'title' => 'Student works',
         'text'  => 'Celebrate achievements from our workshop students and gather inspiration.',
-        'tag'   => 'Task 5',
+        'tag'   => 'Showcase',
         'meta'  => 'Gallery updates weekly',
         'href'  => 'studentworks.php',
         'cta'   => 'Browse student works',
@@ -60,7 +70,7 @@ $portalCards = [
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Root Flowers · Main Menu</title>
+  <title>Root Flowers - Main Menu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
@@ -77,20 +87,23 @@ $portalCards = [
     <section class="rf-hero" aria-labelledby="portal-title">
       <div class="rf-hero-content">
         <span class="rf-pill">Root Flowers Portal</span>
-        <h1 id="portal-title" class="rf-title">Welcome back, <?php echo htmlspecialchars($firstName); ?></h1>
+        <h1 id="portal-title" class="rf-title"><?php echo $isLoggedIn ? "Welcome back, " . htmlspecialchars($firstName) : "Explore Root Flowers"; ?></h1>
         <p class="rf-subtitle">
           Manage products, plan workshops, celebrate student creations, and preview upcoming flower identification tools.
         </p>
 
         <div class="rf-hero-actions">
-          <a class="rf-button" href="products.php">Browse products</a>
-          <a class="rf-button rf-button-outline" href="workshops.php">Plan a workshop</a>
+          <a class="rf-button" href="<?php echo $isLoggedIn ? 'products.php' : 'login.php?redirect=products.php'; ?>">Browse products</a>
+          <a class="rf-button rf-button-outline" href="<?php echo $isLoggedIn ? 'workshops.php' : 'login.php?redirect=workshops.php'; ?>">Plan a workshop</a>
         </div>
 
+        <?php if (!$isLoggedIn): ?>
+          <p class="rf-card-text">Login or register to use the quick links below.</p>
+        <?php endif; ?>
         <ul class="rf-hero-list">
-          <li>Curated bouquets and seasonal bundles ready for Req-2.</li>
-          <li>Hands-on workshop schedules with pricing details.</li>
-          <li>Student showcase area plus Assignment 2 preview tools.</li>
+          <li>Curated bouquets and seasonal bundles refreshed monthly.</li>
+          <li>Hands-on workshop schedules with clear pricing.</li>
+          <li>Student showcase area plus upcoming digital tools.</li>
         </ul>
       </div>
 
@@ -113,10 +126,12 @@ $portalCards = [
       <div class="rf-grid">
         <?php foreach ($portalCards as $card):
           $disabled = !empty($card['disabled']);
-          $classes = 'rf-button rf-button-block' . ($disabled ? ' rf-button-disabled' : '');
-          $href = $disabled ? '#' : $card['href'];
+          $locked = !$disabled && !$isLoggedIn;
+          $href = $disabled ? '#' : ($locked ? 'login.php?redirect=' . urlencode($card['href']) : $card['href']);
+          $cta = $locked ? 'Login to view' : $card['cta'];
+          $classes = 'rf-button rf-button-block' . ($disabled || $locked ? ' rf-button-disabled' : '');
         ?>
-          <article class="rf-card<?php echo $disabled ? ' rf-card-disabled' : ''; ?>">
+          <article class="rf-card<?php echo ($disabled ? ' rf-card-disabled' : ''); ?>">
             <div class="rf-card-body">
               <div class="rf-card-top">
                 <span class="rf-card-icon" data-icon="<?php echo htmlspecialchars($card['icon']); ?>"></span>
@@ -129,7 +144,7 @@ $portalCards = [
                 <span class="rf-dot"></span>
                 <span><?php echo htmlspecialchars($card['meta']); ?></span>
               </div>
-              <a class="<?php echo $classes; ?>" href="<?php echo htmlspecialchars($href); ?>"<?php echo $disabled ? ' aria-disabled="true"' : ''; ?>><?php echo htmlspecialchars($card['cta']); ?></a>
+              <a class="<?php echo $classes; ?>" href="<?php echo htmlspecialchars($href); ?>"<?php echo ($disabled || $locked) ? ' aria-disabled="true"' : ''; ?>><?php echo htmlspecialchars($cta); ?></a>
             </div>
           </article>
         <?php endforeach; ?>

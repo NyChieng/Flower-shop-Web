@@ -1,13 +1,15 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_login();
-
+startSessionIfNeeded();
+requireLogin('workshops.php');
+$flash = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
 $workshops = [
     [
         'slug' => 'hand-tied',
         'title' => 'Hand-tied Bouquet Lab',
         'date' => 'Every Saturday',
-        'time' => '9:30 AM – 12:30 PM',
+        'time' => '9:30 AM - 12:30 PM',
         'price' => 'RM220 per participant',
         'venue' => 'Root Flowers Studio, Kuching',
         'summary' => 'Learn stem preparation, spiral binding, and finishing techniques. Includes all flowers and a take-home guide.',
@@ -16,7 +18,7 @@ $workshops = [
         'slug' => 'tablescape',
         'title' => 'Modern Tablescapes Intensive',
         'date' => 'First Sunday each month',
-        'time' => '2:00 PM – 6:00 PM',
+        'time' => '2:00 PM - 6:00 PM',
         'price' => 'RM320 per participant',
         'venue' => 'Jalan Song Event Loft',
         'summary' => 'Build layered centrepieces, candle-safe styling, and transport plans for dining events.',
@@ -25,7 +27,7 @@ $workshops = [
         'slug' => 'terrarium',
         'title' => 'Closed Terrarium Study',
         'date' => 'Alternate Wednesdays',
-        'time' => '7:30 PM – 9:30 PM',
+        'time' => '7:30 PM - 9:30 PM',
         'price' => 'RM180 per participant',
         'venue' => 'Root Flowers Studio Lab Room',
         'summary' => 'Create a sealed terrarium while learning humidity cycles, plant pairing, and long-term care.',
@@ -34,24 +36,29 @@ $workshops = [
         'slug' => 'orchid',
         'title' => 'Orchid Care Masterclass',
         'date' => 'Quarterly (Jan / Apr / Jul / Oct)',
-        'time' => 'Full day, 9:00 AM – 5:00 PM',
+        'time' => 'Full day, 9:00 AM - 5:00 PM',
         'price' => 'RM480 per participant',
         'venue' => 'Sarawak Orchid Park Conservatory',
         'summary' => 'Hands-on orchid repotting, pest management, and bloom planning with guest horticulturists.',
     ],
 ];
 
-function registration_link(string $slug): array
+function registration_link(array $workshop): array
 {
-    $target = 'register_workshop.php?workshop=' . urlencode($slug);
-    return [$target, 'Reserve a seat'];
+    $params = ['title' => $workshop['title']];
+    $email = currentUser();
+    if ($email) {
+        $params['email'] = $email;
+    }
+    $href = 'workshop_reg.php?' . http_build_query($params);
+    return [$href, 'Register now'];
 }
 ?>
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Root Flowers · Workshops</title>
+  <title>Root Flowers - Workshops</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
@@ -61,6 +68,10 @@ function registration_link(string $slug): array
   <?php include __DIR__ . '/nav.php'; ?>
 
   <main class="rf-main">
+    <?php if ($flash): ?>
+      <div class="alert alert-success" role="status"><?php echo htmlspecialchars($flash); ?></div>
+    <?php endif; ?>
+
     <section class="rf-section" aria-labelledby="workshop-intro">
       <header class="rf-section-header">
         <h1 id="workshop-intro" class="rf-section-title">Workshops overview</h1>
@@ -71,7 +82,7 @@ function registration_link(string $slug): array
     <section class="rf-section" aria-label="Workshops">
       <div class="rf-grid">
         <?php foreach ($workshops as $workshop):
-          [$ctaHref, $ctaLabel] = registration_link($workshop['slug']);
+          [$ctaHref, $ctaLabel] = registration_link($workshop);
         ?>
           <article class="rf-card">
             <div class="rf-card-body">

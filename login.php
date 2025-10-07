@@ -1,19 +1,19 @@
 <?php
-session_start();
+require_once __DIR__ . '/auth.php';
+startSessionIfNeeded();
 
 function user_file_path(): string
 {
-    $root = dirname($_SERVER['DOCUMENT_ROOT']);
-    return rtrim($root, '/\\') . '/data/User/user.txt';
+    return __DIR__ . '/data/User/user.txt';
 }
 
 function sanitize_redirect(string $target): string
 {
     if ($target === '') {
-        return 'index.php';
+        return 'main_menu.php';
     }
     if (preg_match('/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i', $target)) {
-        return 'index.php';
+        return 'main_menu.php';
     }
     return ltrim($target, '/');
 }
@@ -21,7 +21,7 @@ function sanitize_redirect(string $target): string
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
-$redirect = sanitize_redirect($_GET['redirect'] ?? ($_POST['redirect'] ?? 'index.php'));
+$redirect = sanitize_redirect($_GET['redirect'] ?? ($_POST['redirect'] ?? 'main_menu.php'));
 $email = trim($_POST['email'] ?? '');
 $login_error = '';
 
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fclose($fh);
 
             if ($ok) {
-                $_SESSION['user_email'] = $user['Email'];
+                loginUser($user['Email']);
                 $_SESSION['user_name']  = trim(($user['First Name'] ?? '') . ' ' . ($user['Last Name'] ?? ''));
                 $_SESSION['first_name'] = $user['First Name'] ?? null;
                 $_SESSION['last_name']  = $user['Last Name'] ?? null;
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login · Root Flowers</title>
+    <title>Root Flowers - Login</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="style/style.css" />
@@ -133,3 +133,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

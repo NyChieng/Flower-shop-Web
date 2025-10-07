@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_login();
+startSessionIfNeeded();
+requireLogin('studentworks.php');
 $firstName = $_SESSION['first_name'] ?? ($_SESSION['user_name'] ?? 'Friend');
 $works = require __DIR__ . '/data/studentworks.php';
 
@@ -12,7 +13,7 @@ usort($works, static function (array $a, array $b): int {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Root Flowers &middot; Student Works</title>
+  <title>Root Flowers - Student Works</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
@@ -25,7 +26,7 @@ usort($works, static function (array $a, array $b): int {
     <section class="rf-section" aria-labelledby="gallery-title">
       <header class="rf-section-header">
         <h1 id="gallery-title" class="rf-section-title">Student works showcase</h1>
-        <p class="rf-section-text">Hi <?php echo htmlspecialchars($firstName); ?>, here are the latest submissions from our workshops. Select any card to view full details (Task&nbsp;6).</p>
+        <p class="rf-section-text">Hi <?php echo htmlspecialchars($firstName); ?>, here are the latest submissions from our workshops. Select any card to view full details.</p>
       </header>
     </section>
 
@@ -54,12 +55,12 @@ usort($works, static function (array $a, array $b): int {
       </div>
     </section>
   </main>
-
-  <footer class="rf-footer">
-    <p>&copy; <?php echo date('Y'); ?> Root Flowers &middot; <a href="main_menu.php">Back to main menu</a></p>
-  </footer>
+  <?php include __DIR__ . '/footer.php'; ?>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
 
 
 

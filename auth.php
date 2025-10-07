@@ -1,18 +1,57 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+const SESSION_USER_KEY = 'user_email';
+
+function startSessionIfNeeded(): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
 }
 
-function require_login(?string $redirectTarget = null): void
+function currentUser(): ?string
 {
-    if (!isset($_SESSION['user_email'])) {
-        $target = $redirectTarget;
-        if ($target === null) {
-            $requestUri = $_SERVER['REQUEST_URI'] ?? '';
-            $target = $requestUri !== '' ? ltrim($requestUri, '/') : basename($_SERVER['PHP_SELF']);
-        }
-        $_SESSION['flash'] = 'Please log in to continue.';
-        header('Location: login.php?redirect=' . urlencode($target));
-        exit;
+    startSessionIfNeeded();
+    $email = $_SESSION[SESSION_USER_KEY] ?? null;
+    return $email !== null && $email !== '' ? $email : null;
+}
+
+function loginUser(string $email): void
+{
+    startSessionIfNeeded();
+    session_regenerate_id(true);
+    $_SESSION[SESSION_USER_KEY] = $email;
+}
+
+function requireLogin(string $target): void
+{
+    startSessionIfNeeded();
+    if (currentUser() !== null) {
+        return;
     }
+
+    $redirectTarget = trim($target) === '' ? 'main_menu.php' : $target;
+    $_SESSION['flash'] = 'Please login to continue.';
+    header('Location: login.php?redirect=' . urlencode($redirectTarget));
+    exit;
+}
+
+function logoutUser(string $redirect = 'index.php'): void
+{
+    startSessionIfNeeded();
+
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+    }
+    session_destroy();
+
+    header('Location: ' . $redirect);
+    exit;
+}
+
+function ensureLoggedInFlash(string $message): void
+{
+    startSessionIfNeeded();
+    $_SESSION['flash'] = $message;
 }

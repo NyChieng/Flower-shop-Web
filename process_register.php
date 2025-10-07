@@ -1,8 +1,9 @@
 <?php
-session_start();
-
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/validate.php';
-require_once __DIR__ . '/lib/files.php';
+require_once __DIR__ . '/files.php';
+
+startSessionIfNeeded();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: registration.php');
@@ -23,54 +24,59 @@ $values = [
 ];
 
 $errors = [];
+$addError = function(string $key, string $message) use (&$errors) {
+    $errors[$key][] = $message;
+};
 
 if (!req($values['first_name'])) {
-    $errors['first_name'][] = 'First name is required.';
+    $addError('first_name', 'First name is required.');
 } elseif (!alphaSpace($values['first_name'])) {
-    $errors['first_name'][] = 'Only letters and spaces allowed.';
+    $addError('first_name', 'Only letters and white space allowed.');
 }
 
 if (!req($values['last_name'])) {
-    $errors['last_name'][] = 'Last name is required.';
+    $addError('last_name', 'Last name is required.');
 } elseif (!alphaSpace($values['last_name'])) {
-    $errors['last_name'][] = 'Only letters and spaces allowed.';
+    $addError('last_name', 'Only letters and white space allowed.');
 }
 
 if (!req($values['dob'])) {
-    $errors['dob'][] = 'Date of birth is required.';
+    $addError('dob', 'Date of birth is required.');
 }
 
 if (!req($values['gender'])) {
-    $errors['gender'][] = 'Please choose a gender option.';
+    $addError('gender', 'Please select a gender.');
 }
 
 if (!req($values['email'])) {
-    $errors['email'][] = 'Email is required.';
+    $addError('email', 'Email is required.');
 } elseif (!validEmailFormat($values['email'])) {
-    $errors['email'][] = 'Invalid email format.';
+    $addError('email', 'Invalid email format.');
 }
 
 if (!req($values['hometown'])) {
-    $errors['hometown'][] = 'Hometown is required.';
+    $addError('hometown', 'Hometown is required.');
 }
 
 if (!req($values['password'])) {
-    $errors['password'][] = 'Password is required.';
+    $addError('password', 'Password is required.');
 } elseif (!strongPwd($values['password'])) {
-    $errors['password'][] = 'Password must be =8 characters with a number and a symbol.';
+    $addError('password', 'Password must contain at least 8 characters with a number and a symbol.');
 }
 
 if (!req($values['confirm_password'])) {
-    $errors['confirm_password'][] = 'Please confirm your password.';
-} elseif (!matchValue($values['password'], $values['confirm_password'])) {
-    $errors['confirm_password'][] = 'Password and confirm password do not match.';
+    $addError('confirm_password', 'Please confirm your password.');
+} elseif (!valuesMatch($values['password'], $values['confirm_password'])) {
+    $addError('confirm_password', 'Password and confirm password do not match.');
 }
 
 if (!isset($errors['email']) && !uniqueEmail($values['email'], $userFile)) {
-    $errors['email'][] = 'Email is already registered.';
+    $addError('email', 'This email is already registered.');
 }
 
 if (!empty($errors)) {
+    $values['password'] = '';
+    $values['confirm_password'] = '';
     $_SESSION['register_errors'] = $errors;
     $_SESSION['register_values'] = $values;
     header('Location: registration.php');
@@ -98,3 +104,4 @@ unset($_SESSION['register_errors'], $_SESSION['register_values']);
 
 header('Location: login.php?registered=1');
 exit;
+

@@ -1,10 +1,8 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/auth.php';
+startSessionIfNeeded();
 
-$isLoggedIn = !empty($_SESSION['user_email']);
-
+$isLoggedIn = currentUser() !== null;
 $navLinks = [
     ['label' => 'Home',          'href' => 'index.php',        'requiresLogin' => false],
     ['label' => 'Main Menu',     'href' => 'main_menu.php',    'requiresLogin' => true],
@@ -30,10 +28,11 @@ $navLinks = [
       <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
         <?php foreach ($navLinks as $link):
           $locked = $link['requiresLogin'] && !$isLoggedIn;
-          $href   = $locked ? 'login.php?redirect=' . urlencode($link['href']) : $link['href'];
+          $target = $link['href'];
+          $href   = $locked ? 'login.php?redirect=' . urlencode($target) : $target;
         ?>
           <li class="nav-item">
-            <a class="nav-link<?php echo $locked ? ' text-muted' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
+            <a class="nav-link<?php echo $locked ? ' text-muted' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>"<?php echo $locked ? ' aria-disabled="true"' : ''; ?>>
               <?php echo htmlspecialchars($link['label']); ?><?php echo $locked ? ' (login)' : ''; ?>
             </a>
           </li>
@@ -53,3 +52,4 @@ $navLinks = [
     </div>
   </div>
 </nav>
+

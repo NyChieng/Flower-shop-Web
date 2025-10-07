@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_login();
-$works = require __DIR__ . '/data/studentworks.php';
+startSessionIfNeeded();
 $id = $_GET['id'] ?? '';
+requireLogin('studentwork_detail.php?id=' . urlencode($id));
+$works = require __DIR__ . '/data/studentworks.php';
+
 $record = null;
 foreach ($works as $item) {
     if ($item['id'] === $id) {
@@ -19,14 +21,14 @@ if (!$record) {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Root Flowers &middot; Student Work Detail</title>
+  <title>Root Flowers - Student Work Detail</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="./style/style.css" />
 </head>
 <body class="rf-page">
-    <?php include __DIR__ . '/nav.php'; ?>
+  <?php include __DIR__ . '/nav.php'; ?>
 
   <main class="rf-main">
     <section class="rf-section" aria-labelledby="work-detail">
@@ -71,12 +73,7 @@ if (!$record) {
       </section>
     <?php endif; ?>
   </main>
-
-  <footer class="rf-footer">
-    <p>&copy; <?php echo date('Y'); ?> Root Flowers &middot; <a href="main_menu.php">Back to main menu</a></p>
-  </footer>
+  <?php include __DIR__ . '/footer.php'; ?>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
-

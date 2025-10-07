@@ -1,4 +1,4 @@
-<?php // footer with WhatsApp + Instagram + improved layout ?>
+<?php // Footer with contact and navigation ?>
 <footer class="pt-5 pb-4 bg-light border-top">
   <div class="container">
     <div class="row g-4">
@@ -16,10 +16,9 @@
              href="https://api.whatsapp.com/send?phone=60143399709" aria-label="WhatsApp">
             <i class="bi bi-whatsapp"></i> WhatsApp
           </a>
-          <!-- TODO: replace with your actual handle -->
           <a class="btn btn-outline-dark" target="_blank" rel="noopener"
-             href="https://instagram.com/rootflowers" aria-label="Instagram">
-           <i class="bi bi-instagram"></i> Instagram
+             href="https://www.instagram.com/root.flowersss?igsh=Ym1yZ2Vqejd0Mzc3" aria-label="Instagram">
+            <i class="bi bi-instagram"></i> Instagram
           </a>
         </div>
       </div>
@@ -28,16 +27,17 @@
         <h6 class="fw-semibold mb-2">Visit Us</h6>
         <ul class="list-unstyled mb-0">
           <li>Kuching, Sarawak</li>
-          <li>Mon–Sat: 10:00–19:00</li>
-          <li>Sun: 11:00–17:00</li>
+          <li>Mon&ndash;Sat: 10:00&ndash;19:00</li>
+          <li>Sun: 11:00&ndash;17:00</li>
         </ul>
       </div>
 
       <div class="col-md-3">
-        <h6 class="fw-semibold mb-2">Links</h6>
+        <h6 class="fw-semibold mb-2">Quick links</h6>
         <ul class="list-unstyled mb-0">
-          <li><a class="link-secondary text-decoration-none" href="about.php">About</a></li>
           <li><a class="link-secondary text-decoration-none" href="index.php">Home</a></li>
+          <li><a class="link-secondary text-decoration-none" href="main_menu.php">Main menu</a></li>
+          <li><a class="link-secondary text-decoration-none" href="about.php">About assignment</a></li>
         </ul>
       </div>
     </div>
@@ -45,10 +45,10 @@
     <hr class="my-4" />
 
     <div class="foot-bottom">
-      <span>© <?php echo date('Y'); ?> Root Flowers. All rights reserved.</span>
+      <span>&copy; <?php echo date('Y'); ?> Root Flowers. All rights reserved.</span>
       <div class="links">
-        <a class="link-secondary text-decoration-none" href="privacy.php">Privacy</a>
-        <a class="link-secondary text-decoration-none" href="terms.php">Terms</a>
+        <a class="link-secondary text-decoration-none" href="mailto:rootflowers@example.com">Email us</a>
+        <a class="link-secondary text-decoration-none" href="workshop_reg.php">Register for a workshop</a>
       </div>
     </div>
   </div>

@@ -19,7 +19,7 @@ function strongPwd(string $password): bool
     return strlen($password) >= 8 && preg_match('/\d/', $password) && preg_match('/[^A-Za-z0-9]/', $password);
 }
 
-function matchValue($a, $b): bool
+function valuesMatch($a, $b): bool
 {
     return $a === $b;
 }
@@ -45,3 +45,4 @@ function uniqueEmail(string $email, string $pathToUserFile): bool
 
     return true;
 }
+
