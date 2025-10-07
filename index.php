@@ -3,7 +3,6 @@ require_once __DIR__ . '/auth.php';
 startSessionIfNeeded();
 
 $loggedIn  = currentUser() !== null;
-$instagram = 'https://www.instagram.com/root.flowersss/';
 $firstName = trim($_SESSION['first_name'] ?? ($_SESSION['user_name'] ?? ''));
 if ($firstName === '') {
     $firstName = 'there';
@@ -82,7 +81,6 @@ while (count($photos) < 6) {
                   <a class="btn btn-outline-dark btn-lg" href="login.php">Login</a>
                   <a class="btn btn-outline-secondary btn-lg" href="registration.php">Register</a>
                 <?php endif; ?>
-                <a class="btn btn-light btn-lg" href="<?php echo htmlspecialchars($instagram); ?>" target="_blank" rel="noopener">Instagram</a>
               </div>
             </div>
           </div>

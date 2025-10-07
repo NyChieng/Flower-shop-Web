@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/files.php';
 startSessionIfNeeded();
 
 function user_file_path(): string
@@ -36,14 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ok = false;
             $user = [];
             while (($line = fgets($fh)) !== false) {
-                $parts  = array_map('trim', explode('|', $line));
-                $fields = [];
-                foreach ($parts as $p) {
-                    $kv = explode(':', $p, 2);
-                    if (count($kv) === 2) {
-                        $fields[trim($kv[0])] = trim($kv[1]);
-                    }
-                }
+                $fields = parseDelimitedRecord($line);
                 if (isset($fields['Email'], $fields['Password'])
                     && strcasecmp($fields['Email'], $email) === 0
                     && $fields['Password'] === $password) {
@@ -83,7 +77,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="layout-page">
 
-  <?php include __DIR__ . '/nav.php'; ?>
+  <header class="py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="brand-text fw-semibold text-decoration-none" href="index.php">Root Flowers</a>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-dark btn-sm" href="index.php">Home</a>
+        <a class="btn btn-dark btn-sm" href="registration.php">Register</a>
+      </div>
+    </div>
+  </header>
 
   <header class="page-header">
     <div class="container">

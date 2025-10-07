@@ -13,7 +13,12 @@ startSessionIfNeeded();
   <link rel="stylesheet" href="./style/style.css" />
 </head>
 <body class="rf-page">
-  <?php include __DIR__ . '/nav.php'; ?>
+  <header class="py-3 border-bottom">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="brand-text fw-semibold text-decoration-none" href="index.php">Root Flowers</a>
+      <a class="btn btn-outline-dark btn-sm" href="index.php">Back to Home</a>
+    </div>
+  </header>
 
   <main class="rf-main">
     <section class="rf-section" aria-labelledby="about-assignment">

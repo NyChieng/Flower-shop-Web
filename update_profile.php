@@ -13,13 +13,8 @@ $originalLineIndex = null;
 
 $lines = readLines($userFile);
 foreach ($lines as $index => $line) {
-    $parts = array_map('trim', explode('|', $line));
-    $record = [];
-    foreach ($parts as $part) {
-        [$k, $v] = array_pad(explode(':', $part, 2), 2, '');
-        $record[$k] = trim($v);
-    }
-    if (($record['Email'] ?? '') === $currentEmail) {
+    $record = parseDelimitedRecord($line);
+    if (isset($record['Email']) && strcasecmp($record['Email'], $currentEmail) === 0) {
         $originalRecord = $record;
         $originalLineIndex = $index;
         break;
@@ -124,14 +119,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $originalRecord) {
 
     if (strcasecmp($values['email'], $originalRecord['Email']) !== 0) {
         foreach ($lines as $line) {
-            if (stripos($line, 'Email:') === false) {
+            $record = parseDelimitedRecord($line);
+            if (!array_key_exists('Email', $record)) {
                 continue;
             }
-            if (preg_match('/\bEmail:([^|]+)/', $line, $m)) {
-                if (strcasecmp(trim($m[1]), $values['email']) === 0) {
-                    $addError('email', 'Another account already uses this email.');
-                    break;
-                }
+            if (strcasecmp($record['Email'], $values['email']) === 0) {
+                $addError('email', 'Another account already uses this email.');
+                break;
             }
         }
     }

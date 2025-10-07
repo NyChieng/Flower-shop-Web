@@ -36,7 +36,15 @@ function fieldErrors(string $key, array $errors): array
 </head>
 <body>
 
-  <?php include __DIR__ . '/nav.php'; ?>
+  <header class="py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="brand-text fw-semibold text-decoration-none" href="index.php">Root Flowers</a>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-dark btn-sm" href="index.php">Home</a>
+        <a class="btn btn-dark btn-sm" href="login.php">Login</a>
+      </div>
+    </div>
+  </header>
 
   <header class="page-header">
     <div class="container">

@@ -6,7 +6,16 @@ require_once __DIR__ . '/files.php';
 startSessionIfNeeded();
 requireLogin('workshop_reg.php');
 
-$storedValues = $_SESSION['workshop_reg_values'] ?? [
+$currentUserEmail = currentUser() ?? '';
+$userFile = __DIR__ . '/data/User/user.txt';
+$workshopFile = __DIR__ . '/data/User/workshop_reg.txt';
+$currentUserRecord = $currentUserEmail !== '' ? findRecordByField($userFile, 'Email', $currentUserEmail) : null;
+
+$sessionValues = $_SESSION['workshop_reg_values'] ?? null;
+$sessionErrors = $_SESSION['workshop_reg_errors'] ?? [];
+$hadPostBack = $sessionValues !== null;
+
+$storedValues = $sessionValues ?? [
     'first_name'        => '',
     'last_name'         => '',
     'contact_number'    => '',
@@ -14,7 +23,7 @@ $storedValues = $_SESSION['workshop_reg_values'] ?? [
     'workshop_datetime' => '',
     'workshop_title'    => '',
 ];
-$errors = $_SESSION['workshop_reg_errors'] ?? [];
+$errors = $sessionErrors;
 unset($_SESSION['workshop_reg_values'], $_SESSION['workshop_reg_errors']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -29,6 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 }
 
+if (!$hadPostBack && $currentUserRecord) {
+    $storedValues['first_name'] = $storedValues['first_name'] ?: ($currentUserRecord['First Name'] ?? '');
+    $storedValues['last_name'] = $storedValues['last_name'] ?: ($currentUserRecord['Last Name'] ?? '');
+    $storedValues['email'] = $currentUserRecord['Email'] ?? $storedValues['email'];
+}
+
 function oldValue(string $key, array $values): string
 {
     return htmlspecialchars($values[$key] ?? '', ENT_QUOTES);
@@ -37,6 +52,36 @@ function oldValue(string $key, array $values): string
 function fieldErrorLines(string $key, array $errors): array
 {
     return $errors[$key] ?? [];
+}
+
+function normaliseWorkshopDateTimeForComparison(string $value): ?string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return null;
+    }
+
+    $formats = ['Y-m-d\\TH:i', 'Y-m-d H:i', 'd-m-Y H:i', 'd/m/Y H:i'];
+    foreach ($formats as $format) {
+        $dt = DateTime::createFromFormat($format, $value);
+        if ($dt instanceof DateTime) {
+            return $dt->format('Y-m-d H:i');
+        }
+    }
+
+    $timestamp = strtotime($value);
+    return $timestamp ? date('Y-m-d H:i', $timestamp) : null;
+}
+
+function formatWorkshopDateTimeForStorage(string $value): string
+{
+    $normalised = normaliseWorkshopDateTimeForComparison($value);
+    if ($normalised === null) {
+        return $value;
+    }
+
+    $dt = DateTime::createFromFormat('Y-m-d H:i', $normalised);
+    return $dt ? $dt->format('d-m-Y H:i') : $value;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -86,6 +131,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $addError('workshop_title', 'Workshop title is required.');
     }
 
+    if (empty($errs)) {
+        $targetDate = normaliseWorkshopDateTimeForComparison($values['workshop_datetime']);
+        foreach (readDelimitedRecords($workshopFile) as $record) {
+            if (!isset($record['Email']) || strcasecmp($record['Email'], $values['email']) !== 0) {
+                continue;
+            }
+
+            $matchesTitle = isset($record['Workshop Title']) && strcasecmp($record['Workshop Title'], $values['workshop_title']) === 0;
+            $existingDate = normaliseWorkshopDateTimeForComparison($record['Workshop DateTime'] ?? '');
+            $matchesDate = $targetDate !== null && $existingDate !== null && $existingDate === $targetDate;
+
+            if ($matchesTitle || $matchesDate) {
+                $addError('email', 'This email already has a registration for the selected workshop.');
+                break;
+            }
+        }
+    }
+
     if (!empty($errs)) {
         $_SESSION['workshop_reg_errors'] = $errs;
         $_SESSION['workshop_reg_values'] = $values;
@@ -93,12 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $filePath = __DIR__ . '/data/User/workshop_reg.txt';
-
-    $dtFormatted = $values['workshop_datetime'];
-    if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $values['workshop_datetime'])) {
-        $dtFormatted = date('d-m-Y H:i', strtotime($values['workshop_datetime']));
-    }
+    $dtFormatted = formatWorkshopDateTimeForStorage($values['workshop_datetime']);
 
     $record = 'First Name:' . $values['first_name']
             . '|Last Name:' . $values['last_name']
@@ -107,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             . '|Workshop DateTime:' . $dtFormatted
             . '|Workshop Title:' . $values['workshop_title'];
 
-    appendLine($filePath, $record);
+    appendLine($workshopFile, $record);
 
     $_SESSION['flash'] = 'Workshop registration saved. We will be in touch!';
     header('Location: workshops.php');

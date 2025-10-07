@@ -24,25 +24,19 @@ function profileImagePath(?string $gender = null): string
     return file_exists($absolute) ? $candidate : 'img/login.png';
 }
 
-function findProfileGender(string $email, string $filePath): ?string
+function loadCurrentUserRecord(string $email, string $filePath): ?array
 {
-    foreach (readLines($filePath) as $line) {
-        $parts = array_map('trim', explode('|', $line));
-        $record = [];
-        foreach ($parts as $part) {
-            [$k, $v] = array_pad(explode(':', $part, 2), 2, '');
-            $record[$k] = trim($v);
-        }
-        if (isset($record['Email']) && strcasecmp($record['Email'], $email) === 0) {
-            return $record['Gender'] ?? null;
-        }
+    if ($email === '') {
+        return null;
     }
 
-    return null;
+    return findRecordByField($filePath, 'Email', $email);
 }
 
 $userFile = __DIR__ . '/data/User/user.txt';
-$currentGender = findProfileGender(currentUser(), $userFile) ?? 'Female';
+$currentUserEmail = currentUser() ?? '';
+$currentUserRecord = loadCurrentUserRecord($currentUserEmail, $userFile);
+$currentGender = $currentUserRecord['Gender'] ?? 'Female';
 $customProfile = __DIR__ . '/img/profile.jpg';
 $imageSrc = file_exists($customProfile) ? 'img/profile.jpg' : profileImagePath($currentGender);
 ?>
@@ -81,6 +75,18 @@ $imageSrc = file_exists($customProfile) ? 'img/profile.jpg' : profileImagePath($
           <blockquote class="rf-profile-declaration">
             <?php echo htmlspecialchars($profile['declaration']); ?>
           </blockquote>
+          <?php if ($currentUserRecord): ?>
+            <div class="rf-profile-meta">
+              <h2 class="h6 text-uppercase text-muted mb-2">Portal account</h2>
+              <ul class="rf-profile-list">
+                <li><strong>Account holder:</strong> <?php echo htmlspecialchars(trim(($currentUserRecord['First Name'] ?? '') . ' ' . ($currentUserRecord['Last Name'] ?? ''))); ?></li>
+                <li><strong>Account email:</strong> <a href="mailto:<?php echo htmlspecialchars($currentUserRecord['Email'] ?? ''); ?>"><?php echo htmlspecialchars($currentUserRecord['Email'] ?? ''); ?></a></li>
+                <?php if (!empty($currentUserRecord['Hometown'])): ?>
+                  <li><strong>Hometown:</strong> <?php echo htmlspecialchars($currentUserRecord['Hometown']); ?></li>
+                <?php endif; ?>
+              </ul>
+            </div>
+          <?php endif; ?>
           <div class="rf-profile-actions">
             <a class="rf-button" href="index.php">Back to Home</a>
             <a class="rf-button rf-button-outline" href="about.php">About this Assignment</a>

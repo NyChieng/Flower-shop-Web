@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/files.php';
+
 function req($value): bool
 {
     return isset($value) && trim($value) !== '';
@@ -36,10 +38,12 @@ function uniqueEmail(string $email, string $pathToUserFile): bool
     }
 
     foreach ($lines as $line) {
-        if (preg_match('/\bEmail:([^|]+)/', $line, $m)) {
-            if (strcasecmp(trim($m[1]), $email) === 0) {
-                return false;
-            }
+        $record = parseDelimitedRecord($line);
+        if (!array_key_exists('Email', $record)) {
+            continue;
+        }
+        if (strcasecmp($record['Email'], $email) === 0) {
+            return false;
         }
     }
 
