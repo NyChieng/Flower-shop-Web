@@ -135,7 +135,12 @@ function userDataPath(): string
 
 function workshopRegistrationPath(): string
 {
-    return userDataDirectory() . DIRECTORY_SEPARATOR . 'workshop_reg.txt';
+    $xamppRoot = dirname(__DIR__, 3);
+    $directory = $xamppRoot . DIRECTORY_SEPARATOR . 'data';
+    if (!is_dir($directory)) {
+        mkdir($directory, 0775, true);
+    }
+    return $directory . DIRECTORY_SEPARATOR . 'workshop_reg.txt';
 }
 
 $currentUserEmail = $_SESSION['user_email'] ?? '';
