@@ -1,14 +1,146 @@
 <?php
-require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/validate.php';
-require_once __DIR__ . '/files.php';
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-startSessionIfNeeded();
-requireLogin('workshop_reg.php');
+if (empty($_SESSION['user_email'])) {
+    $_SESSION['flash'] = 'Please login to continue.';
+    header('Location: login.php?redirect=' . urlencode('workshop_reg.php'));
+    exit;
+}
 
-$currentUserEmail = currentUser() ?? '';
-$userFile = __DIR__ . '/data/User/user.txt';
-$workshopFile = __DIR__ . '/data/User/workshop_reg.txt';
+function ensureDir(string $directory): void
+{
+    if ($directory === '' || is_dir($directory)) {
+        return;
+    }
+    mkdir($directory, 0775, true);
+}
+
+function appendLine(string $filePath, string $line): void
+{
+    ensureDir(dirname($filePath));
+    $handle = fopen($filePath, 'a');
+    if ($handle === false) {
+        throw new RuntimeException('Unable to open file for writing: ' . $filePath);
+    }
+
+    try {
+        if (!flock($handle, LOCK_EX)) {
+            throw new RuntimeException('Unable to obtain file lock: ' . $filePath);
+        }
+        fwrite($handle, $line . PHP_EOL);
+        fflush($handle);
+        flock($handle, LOCK_UN);
+    } finally {
+        fclose($handle);
+    }
+}
+
+function readLines(string $filePath): array
+{
+    if (!file_exists($filePath)) {
+        return [];
+    }
+    $lines = file($filePath, FILE_IGNORE_NEW_LINES);
+    return $lines === false ? [] : $lines;
+}
+
+function parseDelimitedRecord(string $line, string $pairDelimiter = '|'): array
+{
+    $record = [];
+    foreach (explode($pairDelimiter, $line) as $segment) {
+        $segment = trim($segment);
+        if ($segment === '') {
+            continue;
+        }
+
+        [$key, $value] = array_pad(explode(':', $segment, 2), 2, '');
+        $key = trim($key);
+        if ($key === '') {
+            continue;
+        }
+        $record[$key] = trim($value);
+    }
+
+    return $record;
+}
+
+function readDelimitedRecords(string $filePath, string $pairDelimiter = '|'): array
+{
+    $records = [];
+    foreach (readLines($filePath) as $line) {
+        if (trim($line) === '') {
+            continue;
+        }
+        $records[] = parseDelimitedRecord($line, $pairDelimiter);
+    }
+
+    return $records;
+}
+
+function findRecordByField(string $filePath, string $field, string $value, bool $caseInsensitive = true): ?array
+{
+    if (!file_exists($filePath)) {
+        return null;
+    }
+
+    foreach (readDelimitedRecords($filePath) as $record) {
+        if (!array_key_exists($field, $record)) {
+            continue;
+        }
+
+        $storedValue = $record[$field];
+        if ($caseInsensitive) {
+            if (strcasecmp($storedValue, $value) === 0) {
+                return $record;
+            }
+        } elseif ($storedValue === $value) {
+            return $record;
+        }
+    }
+
+    return null;
+}
+
+function req($value): bool
+{
+    return isset($value) && trim($value) !== '';
+}
+
+function alphaSpace(string $value): bool
+{
+    return (bool)preg_match('/^[a-zA-Z ]+$/', $value);
+}
+
+function validEmailFormat(string $email): bool
+{
+    return (bool)filter_var($email, FILTER_VALIDATE_EMAIL);
+}
+
+function userDataDirectory(): string
+{
+    $xamppRoot = dirname(__DIR__, 3);
+    $directory = $xamppRoot . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'User';
+    if (!is_dir($directory)) {
+        mkdir($directory, 0775, true);
+    }
+    return $directory;
+}
+
+function userDataPath(): string
+{
+    return userDataDirectory() . DIRECTORY_SEPARATOR . 'user.txt';
+}
+
+function workshopRegistrationPath(): string
+{
+    return userDataDirectory() . DIRECTORY_SEPARATOR . 'workshop_reg.txt';
+}
+
+$currentUserEmail = $_SESSION['user_email'] ?? '';
+$userFile = userDataPath();
+$workshopFile = workshopRegistrationPath();
 $currentUserRecord = $currentUserEmail !== '' ? findRecordByField($userFile, 'Email', $currentUserEmail) : null;
 
 $sessionValues = $_SESSION['workshop_reg_values'] ?? null;
@@ -176,6 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="author" content="Neng Yi Chieng" />
   <title>Root Flowers - Workshop Registration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
@@ -219,8 +352,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <?php endforeach; ?>
             </div>
             <div class="col-md-6">
-              <label class="form-label" for="email">Email (Text input)</label>
-              <input class="form-control" type="text" id="email" name="email" value="<?php echo oldValue('email', $storedValues); ?>" required>
+              <label class="form-label" for="email">Email</label>
+              <input class="form-control" type="email" id="email" name="email" value="<?php echo oldValue('email', $storedValues); ?>" required>
               <?php foreach (fieldErrorLines('email', $errors) as $msg): ?>
                 <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
               <?php endforeach; ?>

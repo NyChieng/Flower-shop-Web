@@ -1,6 +1,7 @@
 <?php
-require_once __DIR__ . '/auth.php';
-startSessionIfNeeded();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 $storedValues = $_SESSION['register_values'] ?? [
     'first_name'       => '',
@@ -27,6 +28,7 @@ function fieldErrors(string $key, array $errors): array
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="author" content="Neng Yi Chieng" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Root Flowers - Registration</title>
 
@@ -36,13 +38,14 @@ function fieldErrors(string $key, array $errors): array
 </head>
 <body>
 
-  <header class="py-3">
-    <div class="container d-flex justify-content-between align-items-center">
-      <a class="brand-text fw-semibold text-decoration-none" href="index.php">Root Flowers</a>
-      <div class="d-flex gap-2">
-        <a class="btn btn-outline-dark btn-sm" href="index.php">Home</a>
-        <a class="btn btn-dark btn-sm" href="login.php">Login</a>
-      </div>
+  <header class="py-3 border-bottom bg-white shadow-sm">
+    <div class="container">
+      <a class="d-flex align-items-center gap-2 text-decoration-none" href="index.php">
+        <img src="img/logo_1.jpg" alt="Root Flowers logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
+        <span class="fw-bold fs-5">
+          <i class="bi bi-flower1 me-1 text-danger"></i>Root Flowers
+        </span>
+      </a>
     </div>
   </header>
 
@@ -106,8 +109,8 @@ function fieldErrors(string $key, array $errors): array
                   </div>
 
                   <div class="col-md-6">
-                    <label for="email" class="form-label">Email (Text input)</label>
-                    <input type="text" class="form-control" id="email" name="email" value="<?php echo old('email', $storedValues); ?>" required>
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" value="<?php echo old('email', $storedValues); ?>" required>
                     <?php foreach (fieldErrors('email', $errors) as $msg): ?>
                       <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
                     <?php endforeach; ?>
@@ -122,16 +125,26 @@ function fieldErrors(string $key, array $errors): array
                   </div>
 
                   <div class="col-md-6">
-                    <label for="password" class="form-label">Password (Text input)</label>
-                    <input type="text" class="form-control" id="password" name="password" required>
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                      <input type="password" class="form-control" id="password" name="password" required>
+                      <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password" aria-label="Toggle password visibility">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    </div>
                     <?php foreach (fieldErrors('password', $errors) as $msg): ?>
                       <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
                     <?php endforeach; ?>
                   </div>
 
                   <div class="col-md-6">
-                    <label for="confirm_password" class="form-label">Confirm Password (Text input)</label>
-                    <input type="text" class="form-control" id="confirm_password" name="confirm_password" required>
+                    <label for="confirm_password" class="form-label">Confirm Password</label>
+                    <div class="input-group">
+                      <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                      <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirm_password" aria-label="Toggle confirm password visibility">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    </div>
                     <?php foreach (fieldErrors('confirm_password', $errors) as $msg): ?>
                       <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
                     <?php endforeach; ?>
@@ -152,9 +165,22 @@ function fieldErrors(string $key, array $errors): array
     </div>
   </main>
 
-  <?php include __DIR__ . '/footer.php'; ?>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.querySelectorAll('.toggle-password').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var targetId = this.getAttribute('data-target');
+        var input = document.getElementById(targetId);
+        if (!input) {
+          return;
+        }
+        var isPassword = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isPassword ? 'text' : 'password');
+        this.querySelector('i').classList.toggle('bi-eye');
+        this.querySelector('i').classList.toggle('bi-eye-slash');
+        this.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+      });
+    });
+  </script>
 </body>
 </html>
-

@@ -1,13 +1,83 @@
 <?php
-require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/validate.php';
-require_once __DIR__ . '/files.php';
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-startSessionIfNeeded();
-requireLogin('update_profile.php');
+if (empty($_SESSION['user_email'])) {
+    $_SESSION['flash'] = 'Please login to continue.';
+    header('Location: login.php?redirect=' . urlencode('update_profile.php'));
+    exit;
+}
 
-$userFile = __DIR__ . '/data/User/user.txt';
-$currentEmail = currentUser();
+function ensureDir(string $directory): void
+{
+    if ($directory === '' || is_dir($directory)) {
+        return;
+    }
+    mkdir($directory, 0775, true);
+}
+
+function readLines(string $filePath): array
+{
+    if (!file_exists($filePath)) {
+        return [];
+    }
+    $lines = file($filePath, FILE_IGNORE_NEW_LINES);
+    return $lines === false ? [] : $lines;
+}
+
+function parseDelimitedRecord(string $line, string $pairDelimiter = '|'): array
+{
+    $record = [];
+    foreach (explode($pairDelimiter, $line) as $segment) {
+        $segment = trim($segment);
+        if ($segment === '') {
+            continue;
+        }
+
+        [$key, $value] = array_pad(explode(':', $segment, 2), 2, '');
+        $key = trim($key);
+        if ($key === '') {
+            continue;
+        }
+        $record[$key] = trim($value);
+    }
+
+    return $record;
+}
+
+function alphaSpace(string $value): bool
+{
+    return (bool)preg_match('/^[a-zA-Z ]+$/', $value);
+}
+
+function validEmailFormat(string $email): bool
+{
+    return (bool)filter_var($email, FILTER_VALIDATE_EMAIL);
+}
+
+function req($value): bool
+{
+    return isset($value) && trim($value) !== '';
+}
+
+function userDataDirectory(): string
+{
+    $xamppRoot = dirname(__DIR__, 3);
+    $directory = $xamppRoot . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'User';
+    if (!is_dir($directory)) {
+        mkdir($directory, 0775, true);
+    }
+    return $directory;
+}
+
+function userDataPath(): string
+{
+    return userDataDirectory() . DIRECTORY_SEPARATOR . 'user.txt';
+}
+
+$userFile = userDataPath();
+$currentEmail = $_SESSION['user_email'] ?? null;
 $originalRecord = null;
 $originalLineIndex = null;
 
@@ -162,6 +232,7 @@ $imageSrc = file_exists($customProfile) ? 'img/profile.jpg' : profileImagePath($
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="author" content="Neng Yi Chieng" />
   <title>Root Flowers - Update Profile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
@@ -225,8 +296,8 @@ $imageSrc = file_exists($customProfile) ? 'img/profile.jpg' : profileImagePath($
                 <?php endforeach; ?>
               </div>
               <div class="col-md-6">
-                <label class="form-label" for="email">Email (Text input)</label>
-                <input class="form-control" type="text" id="email" name="email" value="<?php echo old('email', $values); ?>" required>
+                <label class="form-label" for="email">Email</label>
+                <input class="form-control" type="email" id="email" name="email" value="<?php echo old('email', $values); ?>" required>
                 <?php foreach (fieldErrors('email', $errors) as $msg): ?>
                   <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
                 <?php endforeach; ?>

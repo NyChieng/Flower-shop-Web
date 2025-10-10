@@ -1,16 +1,135 @@
 <?php
-require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/validate.php';
-require_once __DIR__ . '/files.php';
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-startSessionIfNeeded();
+function ensureDir(string $directory): void
+{
+    if ($directory === '' || is_dir($directory)) {
+        return;
+    }
+    mkdir($directory, 0775, true);
+}
+
+function appendLine(string $filePath, string $line): void
+{
+    ensureDir(dirname($filePath));
+    $handle = fopen($filePath, 'a');
+    if ($handle === false) {
+        throw new RuntimeException('Unable to open file for writing: ' . $filePath);
+    }
+
+    try {
+        if (!flock($handle, LOCK_EX)) {
+            throw new RuntimeException('Unable to obtain file lock: ' . $filePath);
+        }
+        fwrite($handle, $line . PHP_EOL);
+        fflush($handle);
+        flock($handle, LOCK_UN);
+    } finally {
+        fclose($handle);
+    }
+}
+
+function readLines(string $filePath): array
+{
+    if (!file_exists($filePath)) {
+        return [];
+    }
+    $lines = file($filePath, FILE_IGNORE_NEW_LINES);
+    return $lines === false ? [] : $lines;
+}
+
+function parseDelimitedRecord(string $line, string $pairDelimiter = '|'): array
+{
+    $record = [];
+    foreach (explode($pairDelimiter, $line) as $segment) {
+        $segment = trim($segment);
+        if ($segment === '') {
+            continue;
+        }
+
+        [$key, $value] = array_pad(explode(':', $segment, 2), 2, '');
+        $key = trim($key);
+        if ($key === '') {
+            continue;
+        }
+        $record[$key] = trim($value);
+    }
+
+    return $record;
+}
+
+function req($value): bool
+{
+    return isset($value) && trim($value) !== '';
+}
+
+function alphaSpace(string $value): bool
+{
+    return (bool)preg_match('/^[a-zA-Z ]+$/', $value);
+}
+
+function validEmailFormat(string $email): bool
+{
+    return (bool)filter_var($email, FILTER_VALIDATE_EMAIL);
+}
+
+function strongPwd(string $password): bool
+{
+    return strlen($password) >= 8 && preg_match('/\d/', $password) && preg_match('/[^A-Za-z0-9]/', $password);
+}
+
+function valuesMatch($a, $b): bool
+{
+    return $a === $b;
+}
+
+function userDataDirectory(): string
+{
+    $xamppRoot = dirname(__DIR__, 3);
+    $directory = $xamppRoot . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'User';
+    if (!is_dir($directory)) {
+        mkdir($directory, 0775, true);
+    }
+    return $directory;
+}
+
+function userDataPath(): string
+{
+    return userDataDirectory() . DIRECTORY_SEPARATOR . 'user.txt';
+}
+
+function uniqueEmail(string $email, string $pathToUserFile): bool
+{
+    if (!file_exists($pathToUserFile)) {
+        return true;
+    }
+
+    $lines = file($pathToUserFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!$lines) {
+        return true;
+    }
+
+    foreach ($lines as $line) {
+        $record = parseDelimitedRecord($line);
+        if (!array_key_exists('Email', $record)) {
+            continue;
+        }
+        if (strcasecmp($record['Email'], $email) === 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: registration.php');
     exit;
 }
 
-$userFile = __DIR__ . '/data/User/user.txt';
+$userFile = userDataPath();
 
 $values = [
     'first_name'       => trim($_POST['first_name'] ?? ''),

@@ -1,11 +1,42 @@
 <?php
-require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/files.php';
-startSessionIfNeeded();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 function user_file_path(): string
 {
-    return __DIR__ . '/data/User/user.txt';
+    $xamppRoot = dirname(__DIR__, 3);
+    $userDir = $xamppRoot . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'User';
+    if (!is_dir($userDir)) {
+        mkdir($userDir, 0775, true);
+    }
+    return $userDir . DIRECTORY_SEPARATOR . 'user.txt';
+}
+
+function parseDelimitedRecord(string $line, string $pairDelimiter = '|'): array
+{
+    $record = [];
+    foreach (explode($pairDelimiter, $line) as $segment) {
+        $segment = trim($segment);
+        if ($segment === '') {
+            continue;
+        }
+
+        [$key, $value] = array_pad(explode(':', $segment, 2), 2, '');
+        $key = trim($key);
+        if ($key === '') {
+            continue;
+        }
+        $record[$key] = trim($value);
+    }
+
+    return $record;
+}
+
+function loginUser(string $email): void
+{
+    session_regenerate_id(true);
+    $_SESSION['user_email'] = $email;
 }
 
 function sanitize_redirect(string $target): string
@@ -69,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="author" content="Neng Yi Chieng" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Root Flowers - Login</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -77,13 +109,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="layout-page">
 
-  <header class="py-3">
-    <div class="container d-flex justify-content-between align-items-center">
-      <a class="brand-text fw-semibold text-decoration-none" href="index.php">Root Flowers</a>
-      <div class="d-flex gap-2">
-        <a class="btn btn-outline-dark btn-sm" href="index.php">Home</a>
-        <a class="btn btn-dark btn-sm" href="registration.php">Register</a>
-      </div>
+  <header class="py-3 border-bottom bg-white shadow-sm">
+    <div class="container">
+      <a class="d-flex align-items-center gap-2 text-decoration-none" href="index.php">
+        <img src="img/logo_1.jpg" alt="Root Flowers logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
+        <span class="fw-bold fs-5">
+          <i class="bi bi-flower1 me-1 text-danger"></i>Root Flowers
+        </span>
+      </a>
     </div>
   </header>
 
@@ -129,8 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
   </main>
-
-  <?php include __DIR__ . '/footer.php'; ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
