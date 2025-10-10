@@ -110,7 +110,7 @@ function fieldErrors(string $key, array $errors): array
 
                   <div class="col-md-6">
                     <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" value="<?php echo old('email', $storedValues); ?>" required>
+                    <input type="text" class="form-control" id="email" name="email" value="<?php echo old('email', $storedValues); ?>" required>
                     <?php foreach (fieldErrors('email', $errors) as $msg): ?>
                       <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
                     <?php endforeach; ?>

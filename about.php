@@ -81,24 +81,6 @@
       </div>
     </section>
 
-    <section class="rf-section" aria-labelledby="tasks-pending">
-      <div class="rf-card" style="border-left: 4px solid #ffc107;">
-        <div class="rf-card-body">
-          <div class="d-flex align-items-center gap-2 mb-3">
-            <i class="bi bi-clock-history text-warning" style="font-size: 2rem;"></i>
-            <h2 id="tasks-pending" class="rf-card-title mb-0">Future Enhancements</h2>
-          </div>
-          <ul class="rf-bullet-list">
-            <li><i class="bi bi-hourglass-split text-warning me-2"></i><strong>Assignment 2:</strong> E-commerce purchase flow with cart functionality</li>
-            <li><i class="bi bi-hourglass-split text-warning me-2"></i><strong>File Uploads:</strong> Workshop participant photo submission system</li>
-            <li><i class="bi bi-hourglass-split text-warning me-2"></i><strong>AI Integration:</strong> Flower species recognition and identification feature</li>
-            <li><i class="bi bi-hourglass-split text-warning me-2"></i><strong>Database Migration:</strong> Transition from text files to MySQL database</li>
-            <li><i class="bi bi-hourglass-split text-warning me-2"></i><strong>Video Presentation:</strong> Replace placeholder with final project demonstration</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
     <section class="rf-section" aria-labelledby="resources">
       <div class="rf-card" style="background: linear-gradient(135deg, #fff9f6, #ffffff);">
         <div class="rf-card-body">

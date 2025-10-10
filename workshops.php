@@ -15,7 +15,6 @@ $workshops = [
         'slug' => 'hand-tied',
         'title' => 'Hand-tied Bouquet Masterclass',
         'date' => 'Every Saturday',
-        'time' => '9:30 AM - 12:30 PM',
         'price' => 'RM220 per participant',
         'venue' => 'Root Flowers Studio, Kuching',
         'image' => 'img/workshop_1.jpg',
@@ -27,7 +26,6 @@ $workshops = [
         'slug' => 'tablescape',
         'title' => 'Modern Tablescapes Intensive',
         'date' => 'First Sunday each month',
-        'time' => '2:00 PM - 6:00 PM',
         'price' => 'RM320 per participant',
         'venue' => 'Jalan Song Event Loft',
         'image' => 'img/workshop_2.jpg',
@@ -39,7 +37,6 @@ $workshops = [
         'slug' => 'terrarium',
         'title' => 'Closed Terrarium Study',
         'date' => 'Alternate Wednesdays',
-        'time' => '7:30 PM - 9:30 PM',
         'price' => 'RM180 per participant',
         'venue' => 'Root Flowers Studio Lab Room',
         'image' => 'img/workshop_3.jpg',
@@ -51,7 +48,6 @@ $workshops = [
         'slug' => 'orchid',
         'title' => 'Orchid Care Masterclass',
         'date' => 'Quarterly (Jan / Apr / Jul / Oct)',
-        'time' => 'Full day, 9:00 AM - 5:00 PM',
         'price' => 'RM480 per participant',
         'venue' => 'Sarawak Orchid Park Conservatory',
         'image' => 'img/workshop_4.jpg',
@@ -148,13 +144,6 @@ function registration_link(array $workshop): array
                           <div>
                             <span class="info-label">Date</span>
                             <span class="info-value"><?php echo htmlspecialchars($workshop['date']); ?></span>
-                          </div>
-                        </div>
-                        <div class="workshop-info-item">
-                          <i class="bi bi-clock"></i>
-                          <div>
-                            <span class="info-label">Time</span>
-                            <span class="info-value"><?php echo htmlspecialchars($workshop['time']); ?></span>
                           </div>
                         </div>
                         <div class="workshop-info-item">

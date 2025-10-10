@@ -68,7 +68,24 @@ $portalCards = [
   <link rel="stylesheet" href="./style/style.css" />
 </head>
 <body class="rf-page">
-  <?php include __DIR__ . '/nav.php'; ?>
+  <header class="py-3 border-bottom bg-white shadow-sm">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="d-flex align-items-center gap-2 text-decoration-none" href="index.php">
+        <img src="img/logo_1.jpg" alt="Root Flowers logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
+        <span class="fw-bold fs-5">
+          <i class="bi bi-flower1 me-1 text-danger"></i>Root Flowers
+        </span>
+      </a>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-dark btn-sm" href="update_profile.php">
+          <i class="bi bi-pencil me-2"></i>Edit Profile
+        </a>
+        <a class="btn btn-danger btn-sm" href="logout.php">
+          <i class="bi bi-box-arrow-right me-2"></i>Logout
+        </a>
+      </div>
+    </div>
+  </header>
 
   <main class="rf-main" id="main-content">
     <div class="container py-5">

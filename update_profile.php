@@ -217,12 +217,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $originalRecord) {
         $lines[$originalLineIndex] = $updatedLine;
         file_put_contents($userFile, implode(PHP_EOL, $lines) . PHP_EOL);
 
-        loginUser($values['email']);
+        // Update session variables
+        $_SESSION['user_email'] = $values['email'];
         $_SESSION['first_name'] = $values['first_name'];
         $_SESSION['user_name']  = trim($values['first_name'] . ' ' . $values['last_name']);
 
-        $success = true;
+        // Redirect to refresh the page and show updated data
+        header('Location: update_profile.php?success=1');
+        exit;
     }
+}
+
+// Check if redirected after successful update
+if (isset($_GET['success']) && $_GET['success'] == '1') {
+    $success = true;
 }
 
 $customProfile = __DIR__ . '/img/profile.jpg';

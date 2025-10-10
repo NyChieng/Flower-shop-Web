@@ -353,13 +353,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="col-md-6">
               <label class="form-label" for="email">Email</label>
-              <input class="form-control" type="email" id="email" name="email" value="<?php echo oldValue('email', $storedValues); ?>" required>
+              <input class="form-control" type="text" id="email" name="email" value="<?php echo oldValue('email', $storedValues); ?>" required>
               <?php foreach (fieldErrorLines('email', $errors) as $msg): ?>
                 <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
               <?php endforeach; ?>
             </div>
             <div class="col-md-6">
-              <label class="form-label" for="workshop_datetime">Workshop Date &amp; Time</label>
+              <label class="form-label" for="workshop_datetime">Workshop Date and Time</label>
               <input class="form-control" type="datetime-local" id="workshop_datetime" name="workshop_datetime" value="<?php echo oldValue('workshop_datetime', $storedValues); ?>" required>
               <?php foreach (fieldErrorLines('workshop_datetime', $errors) as $msg): ?>
                 <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
