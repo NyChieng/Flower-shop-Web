@@ -3,35 +3,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-function user_file_path(): string
-{
-    $xamppRoot = dirname(__DIR__, 3);
-    $userDir = $xamppRoot . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'User';
-    if (!is_dir($userDir)) {
-        mkdir($userDir, 0775, true);
-    }
-    return $userDir . DIRECTORY_SEPARATOR . 'user.txt';
-}
-
-function parseDelimitedRecord(string $line, string $pairDelimiter = '|'): array
-{
-    $record = [];
-    foreach (explode($pairDelimiter, $line) as $segment) {
-        $segment = trim($segment);
-        if ($segment === '') {
-            continue;
-        }
-
-        [$key, $value] = array_pad(explode(':', $segment, 2), 2, '');
-        $key = trim($key);
-        if ($key === '') {
-            continue;
-        }
-        $record[$key] = trim($value);
-    }
-
-    return $record;
-}
+require_once 'main.php';
 
 function loginUser(string $email): void
 {
@@ -63,35 +35,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($email === '' || $password === '') {
         $login_error = 'Please enter both email and password.';
     } else {
-        $file = user_file_path();
-        if (file_exists($file) && ($fh = fopen($file, 'r'))) {
-            $ok = false;
-            $user = [];
-            while (($line = fgets($fh)) !== false) {
-                $fields = parseDelimitedRecord($line);
-                if (isset($fields['Email'], $fields['Password'])
-                    && strcasecmp($fields['Email'], $email) === 0
-                    && $fields['Password'] === $password) {
-                    $ok = true;
-                    $user = $fields;
-                    break;
+        try {
+            $conn = getDBConnection();
+            
+            // Get user account
+            $stmt = $conn->prepare("SELECT a.password, a.type, u.first_name, u.last_name 
+                                    FROM account_table a 
+                                    INNER JOIN user_table u ON a.email = u.email 
+                                    WHERE a.email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                
+                // Verify password
+                if (password_verify($password, $row['password'])) {
+                    // Login successful
+                    loginUser($email);
+                    $_SESSION['user_type'] = $row['type'];
+                    $_SESSION['first_name'] = $row['first_name'];
+                    $_SESSION['last_name'] = $row['last_name'];
+                    $_SESSION['user_name'] = trim($row['first_name'] . ' ' . $row['last_name']);
+                    
+                    $stmt->close();
+                    $conn->close();
+                    
+                    // Redirect based on user type
+                    if ($row['type'] === 'admin') {
+                        header('Location: main_menu_admin.php');
+                    } else {
+                        header('Location: ' . $redirect);
+                    }
+                    exit;
                 }
             }
-            fclose($fh);
-
-            if ($ok) {
-                loginUser($user['Email']);
-                $_SESSION['user_name']  = trim(($user['First Name'] ?? '') . ' ' . ($user['Last Name'] ?? ''));
-                $_SESSION['first_name'] = $user['First Name'] ?? null;
-                $_SESSION['last_name']  = $user['Last Name'] ?? null;
-
-                header('Location: ' . $redirect);
-                exit;
-            }
-
+            
+            $stmt->close();
+            $conn->close();
             $login_error = 'Invalid email or password.';
-        } else {
-            $login_error = 'No users registered yet.';
+            
+        } catch (Exception $e) {
+            $login_error = 'Login failed. Please try again.';
         }
     }
 }

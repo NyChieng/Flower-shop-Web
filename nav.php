@@ -5,9 +5,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 $isLoggedIn = !empty($_SESSION['user_email']);
 $navLinks = [
-    ['label' => 'Products',      'href' => 'products.php',     'requiresLogin' => true],
-    ['label' => 'Workshops',     'href' => 'workshops.php',    'requiresLogin' => true],
-    ['label' => 'Student Works', 'href' => 'studentworks.php', 'requiresLogin' => true],
+    ['label' => 'Products',         'href' => 'products.php',     'requiresLogin' => true],
+    ['label' => 'Workshops',        'href' => 'workshops.php',    'requiresLogin' => true],
+    ['label' => 'Student Works',    'href' => 'studentworks.php', 'requiresLogin' => true],
+    ['label' => 'Flower Identifier', 'href' => 'flower.php',       'requiresLogin' => true],
 ];
 ?>
 <nav class="navbar navbar-expand-lg navbar-light navbar-floral shadow-sm sticky-top" aria-label="Root Flowers navigation">
@@ -35,6 +36,7 @@ $navLinks = [
             case 'Products': $icon = 'shop'; break;
             case 'Workshops': $icon = 'calendar-event'; break;
             case 'Student Works': $icon = 'images'; break;
+            case 'Flower Identifier': $icon = 'flower1'; break;
           }
         ?>
           <li class="nav-item">
@@ -49,6 +51,11 @@ $navLinks = [
 
         <li class="nav-item ms-lg-1 d-flex gap-2 flex-wrap">
           <?php if ($isLoggedIn): ?>
+            <?php if (($_SESSION['user_type'] ?? 'user') === 'admin'): ?>
+              <a class="btn btn-dark btn-sm" href="main_menu_admin.php">
+                <i class="bi bi-shield-lock me-1"></i>Admin Portal
+              </a>
+            <?php endif; ?>
             <a class="btn btn-outline-dark btn-sm" href="update_profile.php">
               <i class="bi bi-pencil-square me-1"></i>Edit Profile
             </a>

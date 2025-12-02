@@ -2948,3 +2948,272 @@ img {
         font-size: 1.5rem;
     }
 }
+
+
+/* ---------- Admin Portal Styles ---------- */
+
+.admin-body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+}
+
+.admin-header {
+    background: #16213e;
+    border-bottom: 3px solid #e94560;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.admin-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.admin-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.admin-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #e94560;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(233, 69, 96, 0.3);
+}
+
+.admin-card .card-body {
+    padding: 2rem;
+}
+
+.admin-icon {
+    font-size: 3rem;
+    color: #e94560;
+    margin-bottom: 1rem;
+}
+
+.admin-card h5 {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.admin-card p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.admin-btn {
+    background: #e94560;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.admin-btn:hover {
+    background: #d63850;
+    transform: scale(1.05);
+    color: #fff;
+}
+
+.admin-welcome-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-left: 4px solid #e94560;
+}
+
+.btn-admin-home,
+.btn-admin-logout {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.btn-admin-home:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+    color: #fff;
+}
+
+.btn-admin-logout:hover {
+    background: #e94560;
+    border-color: #e94560;
+    color: #fff;
+}
+
+
+/* ---------- Flower Identifier Page Styles ---------- */
+
+.flower-search-form .input-group {
+    box-shadow: var(--rf-shadow-sm);
+    border-radius: var(--rf-radius-lg);
+    overflow: hidden;
+    border: 2px solid var(--rf-border);
+    transition: var(--rf-transition);
+}
+
+.flower-search-form .input-group:focus-within {
+    border-color: var(--rf-accent);
+    box-shadow: 0 0 0 0.25rem var(--rf-accent-soft), var(--rf-shadow-sm);
+}
+
+.flower-search-form .input-group-text {
+    border: none;
+    padding: 0.75rem 1rem;
+}
+
+.flower-search-form .form-control {
+    border: none;
+    padding: 0.75rem 0.5rem;
+    font-size: 1rem;
+}
+
+.flower-search-form .form-control:focus {
+    box-shadow: none;
+}
+
+.flower-search-form .btn {
+    padding: 0.75rem 2.5rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 0;
+}
+
+.flower-contribution-card {
+    border: 2px solid var(--rf-border);
+    border-radius: var(--rf-radius-lg);
+    overflow: hidden;
+}
+
+.flower-contribution-header {
+    background: linear-gradient(135deg, var(--rf-accent) 0%, var(--rf-accent-dark) 100%);
+    color: white;
+    padding: 1.5rem;
+    border-bottom: none;
+}
+
+.flower-contribution-header h3 {
+    margin-bottom: 0.25rem;
+}
+
+.flower-contribution-header small {
+    opacity: 0.9;
+}
+
+.flower-result-card {
+    border: 2px solid var(--rf-border);
+    border-radius: var(--rf-radius-lg);
+    overflow: hidden;
+    transition: var(--rf-transition);
+}
+
+.flower-result-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--rf-shadow-md);
+    border-color: var(--rf-accent-light);
+}
+
+.flower-card-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+}
+
+.flower-placeholder {
+    background: linear-gradient(135deg, var(--rf-surface-muted) 0%, var(--rf-bg-accent) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rf-muted);
+}
+
+.flower-placeholder i {
+    font-size: 4rem;
+    opacity: 0.3;
+}
+
+.flower-empty-state {
+    padding: 4rem 2rem;
+    color: var(--rf-muted);
+}
+
+.flower-empty-icon {
+    font-size: 5rem;
+    opacity: 0.2;
+    color: var(--rf-accent);
+}
+
+
+/* Image Upload Identification Styles */
+
+.flower-identify-card,
+.flower-search-card {
+    border: 2px solid var(--rf-border);
+    border-radius: var(--rf-radius-lg);
+    overflow: hidden;
+}
+
+.flower-upload-area {
+    position: relative;
+    border: 2px dashed var(--rf-border);
+    border-radius: var(--rf-radius-lg);
+    padding: 2rem;
+    text-align: center;
+    transition: var(--rf-transition);
+    cursor: pointer;
+    background: var(--rf-bg);
+}
+
+.flower-upload-area:hover {
+    border-color: var(--rf-accent);
+    background: var(--rf-bg-accent);
+}
+
+.flower-upload-area.drag-over {
+    border-color: var(--rf-accent);
+    background: var(--rf-accent-soft);
+    transform: scale(1.02);
+}
+
+.flower-upload-area input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.upload-placeholder {
+    pointer-events: none;
+}
+
+.image-preview {
+    margin-top: 1rem;
+}
+
+.image-preview img {
+    max-height: 300px;
+    object-fit: contain;
+    border: 2px solid var(--rf-border);
+}
+
+.flower-identify-card .card-header,
+.flower-search-card .card-header {
+    padding: 1.25rem;
+}
+
+.flower-identify-card .card-header h4,
+.flower-search-card .card-header h4 {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.flower-identify-card .card-header small,
+.flower-search-card .card-header small {
+    opacity: 0.9;
+}

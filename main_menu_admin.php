@@ -3,55 +3,64 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+require_once 'main.php';
+
+// Check if user is logged in and is admin
 if (empty($_SESSION['user_email'])) {
     $_SESSION['flash'] = 'Please login to continue.';
-    header('Location: login.php?redirect=' . urlencode('main_menu.php'));
+    header('Location: login.php');
     exit;
 }
 
-$firstName = trim($_SESSION['first_name'] ?? ($_SESSION['user_name'] ?? 'Friend'));
+if (($_SESSION['user_type'] ?? 'user') !== 'admin') {
+    $_SESSION['flash'] = 'Access denied. Admin privileges required.';
+    header('Location: main_menu.php');
+    exit;
+}
+
+$firstName = trim($_SESSION['first_name'] ?? 'Admin');
 if ($firstName === '') {
-    $firstName = 'Friend';
+    $firstName = 'Admin';
 }
 
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
-$portalCards = [
+$adminCards = [
     [
-        'icon' => 'bi-shop',
+        'icon' => 'bi-people-fill',
         'color' => 'danger',
-        'title' => 'Products',
-        'text'  => 'Browse our beautiful collection of handcrafted bouquets and arrangements.',
-        'href'  => 'products.php',
-        'cta'   => 'View Products',
-        'disabled' => false,
-    ],
-    [
-        'icon' => 'bi-calendar-event',
-        'color' => 'primary',
-        'title' => 'Workshops',
-        'text'  => 'Join our hands-on floral design workshops and learn from the experts.',
-        'href'  => 'workshops.php',
-        'cta'   => 'View Workshops',
+        'title' => 'Manage User Accounts',
+        'text'  => 'Add, edit, or delete user accounts in the system.',
+        'href'  => 'manage_accounts.php',
+        'cta'   => 'Manage Accounts',
         'disabled' => false,
     ],
     [
         'icon' => 'bi-images',
+        'color' => 'primary',
+        'title' => 'Manage Student Works',
+        'text'  => 'Review and approve or reject student work submissions.',
+        'href'  => 'manage_studentwork.php',
+        'cta'   => 'Review Submissions',
+        'disabled' => false,
+    ],
+    [
+        'icon' => 'bi-calendar-check',
         'color' => 'success',
-        'title' => 'Student Gallery',
-        'text'  => 'Get inspired by stunning creations from our workshop participants.',
-        'href'  => 'studentworks.php',
-        'cta'   => 'View Gallery',
+        'title' => 'Manage Workshop Registrations',
+        'text'  => 'Approve or reject workshop registration requests.',
+        'href'  => 'manage_workshop_reg.php',
+        'cta'   => 'Manage Registrations',
         'disabled' => false,
     ],
     [
         'icon' => 'bi-flower1',
         'color' => 'warning',
-        'title' => 'Flower Identifier',
-        'text'  => 'Search for flower species and contribute your own flower discoveries.',
-        'href'  => 'flower.php',
-        'cta'   => 'Explore Flowers',
+        'title' => 'Manage Flower Contributions',
+        'text'  => 'Approve or reject user-contributed flower entries.',
+        'href'  => 'manage_flowers.php',
+        'cta'   => 'Manage Flowers',
         'disabled' => false,
     ],
 ];
@@ -61,7 +70,7 @@ $portalCards = [
 <head>
   <meta charset="utf-8" />
   <meta name="author" content="Neng Yi Chieng" />
-  <title>Root Flowers - Main Menu</title>
+  <title>Root Flowers - Admin Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
@@ -73,7 +82,7 @@ $portalCards = [
       <a class="d-flex align-items-center gap-2 text-decoration-none" href="index.php">
         <img src="img/logo_1.jpg" alt="Root Flowers logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
         <span class="fw-bold fs-5">
-          <i class="bi bi-flower1 me-1 text-danger"></i>Root Flowers
+          <i class="bi bi-flower1 me-1 text-danger"></i>Root Flowers - Admin Portal
         </span>
       </a>
       <div class="d-flex gap-2">
@@ -98,13 +107,15 @@ $portalCards = [
 
       <!-- Clean Hero Section -->
       <div class="text-center mb-5">
-        <h1 class="display-5 fw-bold mb-2">Welcome, <?php echo htmlspecialchars($firstName, ENT_QUOTES); ?>!</h1>
-        <p class="text-muted">Choose a section to explore</p>
+        <h1 class="display-5 fw-bold mb-2">
+          <i class="bi bi-shield-check me-2 text-danger"></i>Welcome, <?php echo htmlspecialchars($firstName, ENT_QUOTES); ?>!
+        </h1>
+        <p class="text-muted">Admin Portal - Manage the Root Flowers system</p>
       </div>
 
       <!-- Simplified Cards Grid -->
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-        <?php foreach ($portalCards as $index => $card):
+        <?php foreach ($adminCards as $index => $card):
           $disabled = !empty($card['disabled']);
           $href = $disabled ? '#' : $card['href'];
         ?>
@@ -158,5 +169,3 @@ $portalCards = [
   </script>
 </body>
 </html>
-
-```
