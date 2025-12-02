@@ -15,6 +15,61 @@ if (empty($_SESSION['user_email']) || ($_SESSION['user_type'] ?? 'user') !== 'ad
 $message = '';
 $messageType = '';
 
+// Handle Excel export
+if (isset($_GET['export']) && $_GET['export'] === 'excel') {
+    try {
+        $conn = getDBConnection();
+        $result = $conn->query("
+            SELECT w.id, w.Name, w.Email, w.Workshop_Name, w.Skill_Level, w.Workshop_Date, w.status,
+                   u.first_name, u.last_name
+            FROM workshop_table w
+            LEFT JOIN user_table u ON w.Email = u.email
+            ORDER BY w.id DESC
+        ");
+        
+        // Set headers for Excel download
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="workshop_registrations_' . date('Y-m-d') . '.xls"');
+        header('Cache-Control: max-age=0');
+        
+        // Output Excel content
+        echo "<table border='1'>";
+        echo "<thead>";
+        echo "<tr>";
+        echo "<th>ID</th>";
+        echo "<th>Participant Name</th>";
+        echo "<th>Email</th>";
+        echo "<th>Workshop Name</th>";
+        echo "<th>Skill Level</th>";
+        echo "<th>Workshop Date</th>";
+        echo "<th>Status</th>";
+        echo "</tr>";
+        echo "</thead>";
+        echo "<tbody>";
+        
+        while ($row = $result->fetch_assoc()) {
+            echo "<tr>";
+            echo "<td>" . htmlspecialchars($row['id']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['Email']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['Workshop_Name']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['Skill_Level']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['Workshop_Date']) . "</td>";
+            echo "<td>" . htmlspecialchars(ucfirst($row['status'])) . "</td>";
+            echo "</tr>";
+        }
+        
+        echo "</tbody>";
+        echo "</table>";
+        
+        $conn->close();
+        exit;
+    } catch (Exception $e) {
+        $message = 'Export failed: ' . $e->getMessage();
+        $messageType = 'danger';
+    }
+}
+
 // Handle approve/reject actions
 if (isset($_GET['action']) && isset($_GET['id'])) {
     $action = $_GET['action'];
@@ -121,26 +176,72 @@ try {
           </div>
         <?php endif; ?>
 
+        <!-- Statistics Cards -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <div class="card text-center border-warning shadow-sm">
+              <div class="card-body">
+                <i class="bi bi-hourglass-split text-warning display-6"></i>
+                <h3 class="mt-2 mb-0"><?php echo count(array_filter($registrations, fn($r) => $r['status'] === 'pending')); ?></h3>
+                <p class="text-muted small mb-0">Pending</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center border-success shadow-sm">
+              <div class="card-body">
+                <i class="bi bi-check-circle text-success display-6"></i>
+                <h3 class="mt-2 mb-0"><?php echo count(array_filter($registrations, fn($r) => $r['status'] === 'approved')); ?></h3>
+                <p class="text-muted small mb-0">Approved</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center border-danger shadow-sm">
+              <div class="card-body">
+                <i class="bi bi-x-circle text-danger display-6"></i>
+                <h3 class="mt-2 mb-0"><?php echo count(array_filter($registrations, fn($r) => $r['status'] === 'rejected')); ?></h3>
+                <p class="text-muted small mb-0">Rejected</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center border-primary shadow-sm">
+              <div class="card-body">
+                <i class="bi bi-people text-primary display-6"></i>
+                <h3 class="mt-2 mb-0"><?php echo count($registrations); ?></h3>
+                <p class="text-muted small mb-0">Total</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="card shadow-sm">
-          <div class="card-header bg-success text-white">
+          <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Workshop Registrations</h5>
+            <a href="?export=excel" class="btn btn-light btn-sm">
+              <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export to Excel
+            </a>
           </div>
           <div class="card-body">
           <?php if (empty($registrations)): ?>
-            <p class="text-center text-muted">No workshop registrations found.</p>
+            <div class="text-center py-5">
+              <i class="bi bi-calendar-x display-1 text-muted mb-3"></i>
+              <p class="text-muted fs-5">No workshop registrations found.</p>
+            </div>
           <?php else: ?>
             <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
                   <tr>
-                    <th>ID</th>
-                    <th>Participant Name</th>
-                    <th>Email</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Contact Number</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th style="width: 5%;">ID</th>
+                    <th style="width: 15%;">Participant</th>
+                    <th style="width: 15%;">Email</th>
+                    <th style="width: 12%;">Date</th>
+                    <th style="width: 10%;">Time</th>
+                    <th style="width: 13%;">Contact</th>
+                    <th style="width: 10%;">Status</th>
+                    <th style="width: 20%;">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -161,22 +262,25 @@ try {
                         </span>
                       </td>
                       <td>
+                        <div class="btn-group" role="group">
                         <?php if ($reg['status'] === 'pending'): ?>
                           <button class="btn btn-sm btn-success" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
                                   data-action="approve"
                                   data-id="<?php echo $reg['id']; ?>"
-                                  data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>">
-                            <i class="bi bi-check-circle"></i> Approve
+                                  data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>"
+                                  title="Approve registration">
+                            <i class="bi bi-check-circle me-1"></i><span class="d-none d-lg-inline">Approve</span>
                           </button>
                           <button class="btn btn-sm btn-danger" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
                                   data-action="reject"
                                   data-id="<?php echo $reg['id']; ?>"
-                                  data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>">
-                            <i class="bi bi-x-circle"></i> Reject
+                                  data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>"
+                                  title="Reject registration">
+                            <i class="bi bi-x-circle me-1"></i><span class="d-none d-lg-inline">Reject</span>
                           </button>
                         <?php elseif ($reg['status'] === 'approved'): ?>
                           <button class="btn btn-sm btn-danger" 
@@ -184,8 +288,9 @@ try {
                                   data-bs-target="#confirmModal"
                                   data-action="reject"
                                   data-id="<?php echo $reg['id']; ?>"
-                                  data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>">
-                            <i class="bi bi-x-circle"></i> Reject
+                                  data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>"
+                                  title="Reject registration">
+                            <i class="bi bi-x-circle me-1"></i><span class="d-none d-lg-inline">Reject</span>
                           </button>
                         <?php else: ?>
                           <button class="btn btn-sm btn-success" 
@@ -193,19 +298,22 @@ try {
                                   data-bs-target="#confirmModal"
                                   data-action="approve"
                                   data-id="<?php echo $reg['id']; ?>"
-                                  data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>">
-                            <i class="bi bi-check-circle"></i> Approve
+                                  data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>"
+                                  title="Approve registration">
+                            <i class="bi bi-check-circle me-1"></i><span class="d-none d-lg-inline">Approve</span>
                           </button>
                         <?php endif; ?>
                         
-                        <button class="btn btn-sm btn-secondary" 
+                        <button class="btn btn-sm btn-outline-secondary" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#confirmModal"
                                 data-action="delete"
                                 data-id="<?php echo $reg['id']; ?>"
-                                data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>">
-                          <i class="bi bi-trash"></i> Delete
+                                data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>"
+                                title="Delete registration">
+                          <i class="bi bi-trash"></i><span class="d-none d-lg-inline ms-1">Delete</span>
                         </button>
+                        </div>
                       </td>
                     </tr>
                   <?php endforeach; ?>

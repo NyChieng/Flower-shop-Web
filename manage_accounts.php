@@ -15,6 +15,60 @@ if (empty($_SESSION['user_email']) || ($_SESSION['user_type'] ?? 'user') !== 'ad
 $message = '';
 $messageType = '';
 
+// Handle Excel export
+if (isset($_GET['export']) && $_GET['export'] === 'excel') {
+    try {
+        $conn = getDBConnection();
+        $result = $conn->query("
+            SELECT u.email, u.first_name, u.last_name, u.dob, u.gender, u.hometown, a.type
+            FROM user_table u
+            INNER JOIN account_table a ON u.email = a.email
+            ORDER BY u.first_name, u.last_name
+        ");
+        
+        // Set headers for Excel download
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="user_accounts_' . date('Y-m-d') . '.xls"');
+        header('Cache-Control: max-age=0');
+        
+        // Output Excel content
+        echo "<table border='1'>";
+        echo "<thead>";
+        echo "<tr>";
+        echo "<th>Email</th>";
+        echo "<th>First Name</th>";
+        echo "<th>Last Name</th>";
+        echo "<th>Date of Birth</th>";
+        echo "<th>Gender</th>";
+        echo "<th>Hometown</th>";
+        echo "<th>Account Type</th>";
+        echo "</tr>";
+        echo "</thead>";
+        echo "<tbody>";
+        
+        while ($row = $result->fetch_assoc()) {
+            echo "<tr>";
+            echo "<td>" . htmlspecialchars($row['email']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['first_name']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['last_name']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['dob'] ?? 'N/A') . "</td>";
+            echo "<td>" . htmlspecialchars($row['gender']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['hometown']) . "</td>";
+            echo "<td>" . htmlspecialchars(ucfirst($row['type'])) . "</td>";
+            echo "</tr>";
+        }
+        
+        echo "</tbody>";
+        echo "</table>";
+        
+        $conn->close();
+        exit;
+    } catch (Exception $e) {
+        $message = 'Export failed: ' . $e->getMessage();
+        $messageType = 'danger';
+    }
+}
+
 // Handle delete action
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['email'])) {
     $emailToDelete = $_GET['email'];
@@ -198,27 +252,34 @@ try {
         <?php endif; ?>
 
         <!-- Add New User Button -->
-        <div class="mb-4">
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-          <i class="bi bi-person-plus me-2"></i>Add New User
-        </button>
-      </div>
-
-      <!-- Users Table -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <button class="btn btn-primary btn-lg shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+              <i class="bi bi-person-plus-fill me-2"></i>Add New User
+            </button>
+            <a href="?export=excel" class="btn btn-success btn-lg shadow-sm ms-2">
+              <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export to Excel
+            </a>
+          </div>
+          <div class="text-end">
+            <p class="mb-0 text-muted">Total Users: <strong><?php echo count($users); ?></strong></p>
+            <small class="text-muted">Admins: <?php echo count(array_filter($users, fn($u) => $u['type'] === 'admin')); ?> | Regular: <?php echo count(array_filter($users, fn($u) => $u['type'] === 'user')); ?></small>
+          </div>
+        </div>      <!-- Users Table -->
       <div class="card shadow-sm">
         <div class="card-header bg-danger text-white">
           <h5 class="mb-0"><i class="bi bi-people me-2"></i>User Accounts</h5>
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-striped table-hover">
-              <thead>
+            <table class="table table-striped table-hover align-middle">
+              <thead class="table-light">
                 <tr>
-                  <th>Email</th>
-                  <th>Name</th>
-                  <th>Gender</th>
-                  <th>Type</th>
-                  <th>Actions</th>
+                  <th style="width: 25%;"><i class="bi bi-envelope me-2"></i>Email</th>
+                  <th style="width: 20%;"><i class="bi bi-person me-2"></i>Name</th>
+                  <th style="width: 12%;"><i class="bi bi-gender-ambiguous me-2"></i>Gender</th>
+                  <th style="width: 15%;"><i class="bi bi-shield me-2"></i>Type</th>
+                  <th style="width: 28%;"><i class="bi bi-tools me-2"></i>Actions</th>
                 </tr>
               </thead>
               <tbody>

@@ -464,7 +464,14 @@ if ($searchQuery !== '') {
                       <em class="text-muted"><?php echo htmlspecialchars($flower['Scientific_Name']); ?></em>
                     </p>
                     
-                    <?php if ($flower['Description'] && file_exists($flower['Description'])): ?>
+                    <?php if (!empty($flower['Description']) && file_exists(__DIR__ . '/' . $flower['Description'])): ?>
+                      <a href="<?php echo htmlspecialchars($flower['Description']); ?>" 
+                         class="btn btn-outline-danger btn-sm" 
+                         target="_blank"
+                         download>
+                        <i class="bi bi-file-pdf me-2"></i>Download Description (PDF)
+                      </a>
+                    <?php elseif (!empty($flower['Description'])): ?>
                       <a href="<?php echo htmlspecialchars($flower['Description']); ?>" 
                          class="btn btn-outline-danger btn-sm" 
                          target="_blank"
