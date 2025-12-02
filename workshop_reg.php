@@ -135,8 +135,7 @@ function userDataPath(): string
 
 function workshopRegistrationPath(): string
 {
-    $xamppRoot = dirname(__DIR__, 3);
-    $directory = $xamppRoot . DIRECTORY_SEPARATOR . 'data';
+    $directory = __DIR__ . DIRECTORY_SEPARATOR . 'data';
     if (!is_dir($directory)) {
         mkdir($directory, 0775, true);
     }
@@ -269,18 +268,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errs)) {
-        $targetDate = normaliseWorkshopDateTimeForComparison($values['workshop_datetime']);
+        
         foreach (readDelimitedRecords($workshopFile) as $record) {
             if (!isset($record['Email']) || strcasecmp($record['Email'], $values['email']) !== 0) {
                 continue;
             }
 
+           
             $matchesTitle = isset($record['Workshop Title']) && strcasecmp($record['Workshop Title'], $values['workshop_title']) === 0;
-            $existingDate = normaliseWorkshopDateTimeForComparison($record['Workshop DateTime'] ?? '');
-            $matchesDate = $targetDate !== null && $existingDate !== null && $existingDate === $targetDate;
 
-            if ($matchesTitle || $matchesDate) {
-                $addError('email', 'This email already has a registration for the selected workshop.');
+            if ($matchesTitle) {
+                $addError('workshop_title', 'You have already registered for this workshop.');
                 break;
             }
         }

@@ -3,6 +3,8 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+require_once 'main.php';
+
 if (empty($_SESSION['user_email'])) {
     $_SESSION['flash'] = 'Please login to continue.';
     header('Location: login.php?redirect=' . urlencode('update_profile.php'));
@@ -15,35 +17,6 @@ function ensureDir(string $directory): void
         return;
     }
     mkdir($directory, 0775, true);
-}
-
-function readLines(string $filePath): array
-{
-    if (!file_exists($filePath)) {
-        return [];
-    }
-    $lines = file($filePath, FILE_IGNORE_NEW_LINES);
-    return $lines === false ? [] : $lines;
-}
-
-function parseDelimitedRecord(string $line, string $pairDelimiter = '|'): array
-{
-    $record = [];
-    foreach (explode($pairDelimiter, $line) as $segment) {
-        $segment = trim($segment);
-        if ($segment === '') {
-            continue;
-        }
-
-        [$key, $value] = array_pad(explode(':', $segment, 2), 2, '');
-        $key = trim($key);
-        if ($key === '') {
-            continue;
-        }
-        $record[$key] = trim($value);
-    }
-
-    return $record;
 }
 
 function alphaSpace(string $value): bool
@@ -61,38 +34,28 @@ function req($value): bool
     return isset($value) && trim($value) !== '';
 }
 
-function userDataDirectory(): string
-{
-    $xamppRoot = dirname(__DIR__, 3);
-    $directory = $xamppRoot . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'User';
-    if (!is_dir($directory)) {
-        mkdir($directory, 0775, true);
-    }
-    return $directory;
-}
-
-function userDataPath(): string
-{
-    return userDataDirectory() . DIRECTORY_SEPARATOR . 'user.txt';
-}
-
-$userFile = userDataPath();
 $currentEmail = $_SESSION['user_email'] ?? null;
 $originalRecord = null;
-$originalLineIndex = null;
+$errorMessage = '';
 
-$lines = readLines($userFile);
-foreach ($lines as $index => $line) {
-    $record = parseDelimitedRecord($line);
-    if (isset($record['Email']) && strcasecmp($record['Email'], $currentEmail) === 0) {
-        $originalRecord = $record;
-        $originalLineIndex = $index;
-        break;
+// Load user data from database
+try {
+    $conn = getDBConnection();
+    $stmt = $conn->prepare("SELECT * FROM user_table WHERE email = ?");
+    $stmt->bind_param("s", $currentEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $originalRecord = $result->fetch_assoc();
+    } else {
+        $errorMessage = 'Unable to locate your profile record.';
     }
-}
-
-if (!$originalRecord) {
-    $errorMessage = 'Unable to locate your profile record.';
+    
+    $stmt->close();
+    $conn->close();
+} catch (Exception $e) {
+    $errorMessage = 'Error loading profile data.';
 }
 
 function formatDateForInput(?string $dob): string
@@ -120,8 +83,12 @@ function fieldErrors(string $key, array $errors): array
     return $errors[$key] ?? [];
 }
 
-function profileImagePath(?string $gender): string
+function profileImagePath(?string $gender, ?string $profileImage = null): string
 {
+    if ($profileImage && file_exists(__DIR__ . '/' . $profileImage)) {
+        return $profileImage;
+    }
+    
     $map = [
         'male' => 'profile_images/boys.jpg',
         'female' => 'profile_images/girl.png',
@@ -134,12 +101,12 @@ function profileImagePath(?string $gender): string
 }
 
 $values = [
-    'first_name' => $originalRecord['First Name'] ?? '',
-    'last_name'  => $originalRecord['Last Name'] ?? '',
-    'dob'        => formatDateForInput($originalRecord['DOB'] ?? ''),
-    'gender'     => $originalRecord['Gender'] ?? 'Female',
-    'email'      => $originalRecord['Email'] ?? '',
-    'hometown'   => $originalRecord['Hometown'] ?? '',
+    'first_name' => $originalRecord['first_name'] ?? '',
+    'last_name'  => $originalRecord['last_name'] ?? '',
+    'dob'        => formatDateForInput($originalRecord['dob'] ?? ''),
+    'gender'     => $originalRecord['gender'] ?? 'Female',
+    'email'      => $originalRecord['email'] ?? '',
+    'hometown'   => $originalRecord['hometown'] ?? '',
 ];
 
 $errors = [];
@@ -187,44 +154,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $originalRecord) {
         $addError('hometown', 'Hometown is required.');
     }
 
-    if (strcasecmp($values['email'], $originalRecord['Email']) !== 0) {
-        foreach ($lines as $line) {
-            $record = parseDelimitedRecord($line);
-            if (!array_key_exists('Email', $record)) {
-                continue;
-            }
-            if (strcasecmp($record['Email'], $values['email']) === 0) {
+    // Check if email changed and if new email already exists
+    if (strcasecmp($values['email'], $originalRecord['email']) !== 0) {
+        try {
+            $conn = getDBConnection();
+            $stmt = $conn->prepare("SELECT email FROM user_table WHERE email = ? AND email != ?");
+            $stmt->bind_param("ss", $values['email'], $originalRecord['email']);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result->num_rows > 0) {
                 $addError('email', 'Another account already uses this email.');
-                break;
+            }
+            $stmt->close();
+            $conn->close();
+        } catch (Exception $e) {
+            $addError('email', 'Error checking email availability.');
+        }
+    }
+
+    // Handle profile image upload
+    $profileImagePath = $originalRecord['profile_image'];
+    if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        $filename = $_FILES['profile_image']['name'];
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        
+        if (!in_array($ext, $allowed)) {
+            $addError('profile_image', 'Only JPG, PNG, and GIF files are allowed.');
+        } elseif ($_FILES['profile_image']['size'] > 5 * 1024 * 1024) { // 5MB limit
+            $addError('profile_image', 'File size must not exceed 5MB.');
+        } else {
+            $uploadDir = __DIR__ . '/profile_images/';
+            ensureDir($uploadDir);
+            $newFilename = 'profile_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            $uploadPath = $uploadDir . $newFilename;
+            
+            if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
+                $profileImagePath = 'profile_images/' . $newFilename;
+            } else {
+                $addError('profile_image', 'Failed to upload profile image.');
+            }
+        }
+    }
+
+    // Handle resume upload (PDF, max 7MB)
+    $resumePath = $originalRecord['resume'] ?? null;
+    if (isset($_FILES['resume']) && $_FILES['resume']['error'] === UPLOAD_ERR_OK) {
+        $filename = $_FILES['resume']['name'];
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $fileType = $_FILES['resume']['type'];
+        
+        if ($ext !== 'pdf' || !in_array($fileType, ['application/pdf', 'application/x-pdf'])) {
+            $addError('resume', 'Only PDF files are allowed for resume.');
+        } elseif ($_FILES['resume']['size'] > 7 * 1024 * 1024) { // 7MB limit
+            $addError('resume', 'Resume file size must not exceed 7MB.');
+        } else {
+            $uploadDir = __DIR__ . '/resume/';
+            ensureDir($uploadDir);
+            $newFilename = 'resume_' . time() . '_' . bin2hex(random_bytes(4)) . '.pdf';
+            $uploadPath = $uploadDir . $newFilename;
+            
+            if (move_uploaded_file($_FILES['resume']['tmp_name'], $uploadPath)) {
+                $resumePath = 'resume/' . $newFilename;
+            } else {
+                $addError('resume', 'Failed to upload resume.');
             }
         }
     }
 
     if (!$errors) {
-        $dobFormatted = $values['dob'];
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $values['dob'])) {
-            $dobFormatted = date('d-m-Y', strtotime($values['dob']));
+        try {
+            $conn = getDBConnection();
+            $conn->begin_transaction();
+            
+            // Update user_table
+            $stmt = $conn->prepare("UPDATE user_table SET first_name = ?, last_name = ?, dob = ?, gender = ?, hometown = ?, profile_image = ?, resume = ? WHERE email = ?");
+            $stmt->bind_param("ssssssss", $values['first_name'], $values['last_name'], $values['dob'], $values['gender'], $values['hometown'], $profileImagePath, $resumePath, $originalRecord['email']);
+            $stmt->execute();
+            $stmt->close();
+            
+            // If email changed, update account_table too
+            if (strcasecmp($values['email'], $originalRecord['email']) !== 0) {
+                $stmt = $conn->prepare("UPDATE account_table SET email = ? WHERE email = ?");
+                $stmt->bind_param("ss", $values['email'], $originalRecord['email']);
+                $stmt->execute();
+                $stmt->close();
+            }
+            
+            $conn->commit();
+            $conn->close();
+            
+            // Update session variables
+            $_SESSION['user_email'] = $values['email'];
+            $_SESSION['first_name'] = $values['first_name'];
+            $_SESSION['last_name'] = $values['last_name'];
+            $_SESSION['user_name']  = trim($values['first_name'] . ' ' . $values['last_name']);
+
+            // Redirect to refresh the page and show updated data
+            header('Location: update_profile.php?success=1');
+            exit;
+            
+        } catch (Exception $e) {
+            if (isset($conn)) {
+                $conn->rollback();
+                $conn->close();
+            }
+            $addError('general', 'Failed to update profile. Please try again.');
         }
-
-        $updatedLine = 'First Name:' . $values['first_name']
-                     . '|Last Name:' . $values['last_name']
-                     . '|DOB:' . $dobFormatted
-                     . '|Gender:' . $values['gender']
-                     . '|Email:' . $values['email']
-                     . '|Hometown:' . $values['hometown']
-                     . '|Password:' . ($originalRecord['Password'] ?? '');
-
-        $lines[$originalLineIndex] = $updatedLine;
-        file_put_contents($userFile, implode(PHP_EOL, $lines) . PHP_EOL);
-
-        // Update session variables
-        $_SESSION['user_email'] = $values['email'];
-        $_SESSION['first_name'] = $values['first_name'];
-        $_SESSION['user_name']  = trim($values['first_name'] . ' ' . $values['last_name']);
-
-        // Redirect to refresh the page and show updated data
-        header('Location: update_profile.php?success=1');
-        exit;
     }
 }
 
@@ -233,8 +269,7 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
     $success = true;
 }
 
-$customProfile = __DIR__ . '/img/profile.jpg';
-$imageSrc = file_exists($customProfile) ? 'img/profile.jpg' : profileImagePath($values['gender'] ?? null);
+$imageSrc = profileImagePath($values['gender'] ?? null, $originalRecord['profile_image'] ?? null);
 ?>
 <!doctype html>
 <html lang="en">
@@ -265,11 +300,11 @@ $imageSrc = file_exists($customProfile) ? 'img/profile.jpg' : profileImagePath($
         <div class="alert alert-success" role="alert">Profile updated successfully.</div>
       <?php endif; ?>
 
-      <form class="rf-section rf-profile" method="post" action="update_profile.php" novalidate>
+      <form class="rf-section rf-profile" method="post" action="update_profile.php" enctype="multipart/form-data" novalidate>
         <div class="rf-card rf-profile-card">
           <div class="rf-card-body">
             <div class="rf-profile-media">
-              <img src="<?php echo htmlspecialchars($imageSrc); ?>" alt="Profile avatar" />
+              <img src="<?php echo htmlspecialchars($imageSrc); ?>" alt="Profile avatar" id="profilePreview" />
             </div>
             <div class="row g-4">
               <div class="col-md-6">
@@ -314,6 +349,28 @@ $imageSrc = file_exists($customProfile) ? 'img/profile.jpg' : profileImagePath($
                 <label class="form-label" for="hometown">Hometown</label>
                 <input class="form-control" type="text" id="hometown" name="hometown" value="<?php echo old('hometown', $values); ?>" required>
                 <?php foreach (fieldErrors('hometown', $errors) as $msg): ?>
+                  <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
+                <?php endforeach; ?>
+              </div>
+              <div class="col-md-12">
+                <label class="form-label" for="profile_image">Profile Image (JPG, PNG, GIF - Max 5MB)</label>
+                <input class="form-control" type="file" id="profile_image" name="profile_image" accept=".jpg,.jpeg,.png,.gif">
+                <small class="text-muted">Leave empty to keep current image</small>
+                <?php foreach (fieldErrors('profile_image', $errors) as $msg): ?>
+                  <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
+                <?php endforeach; ?>
+              </div>
+              <div class="col-md-12">
+                <label class="form-label" for="resume">Resume (PDF - Max 7MB)</label>
+                <input class="form-control" type="file" id="resume" name="resume" accept=".pdf">
+                <small class="text-muted">
+                  <?php if (!empty($originalRecord['resume']) && file_exists(__DIR__ . '/' . $originalRecord['resume'])): ?>
+                    Current: <a href="<?php echo htmlspecialchars($originalRecord['resume']); ?>" target="_blank">View Resume</a> | Upload new to replace
+                  <?php else: ?>
+                    No resume uploaded yet
+                  <?php endif; ?>
+                </small>
+                <?php foreach (fieldErrors('resume', $errors) as $msg): ?>
                   <small class="text-danger d-block"><?php echo htmlspecialchars($msg, ENT_QUOTES); ?></small>
                 <?php endforeach; ?>
               </div>

@@ -3,62 +3,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-function ensureDir(string $directory): void
-{
-    if ($directory === '' || is_dir($directory)) {
-        return;
-    }
-    mkdir($directory, 0775, true);
-}
-
-function appendLine(string $filePath, string $line): void
-{
-    ensureDir(dirname($filePath));
-    $handle = fopen($filePath, 'a');
-    if ($handle === false) {
-        throw new RuntimeException('Unable to open file for writing: ' . $filePath);
-    }
-
-    try {
-        if (!flock($handle, LOCK_EX)) {
-            throw new RuntimeException('Unable to obtain file lock: ' . $filePath);
-        }
-        fwrite($handle, $line . PHP_EOL);
-        fflush($handle);
-        flock($handle, LOCK_UN);
-    } finally {
-        fclose($handle);
-    }
-}
-
-function readLines(string $filePath): array
-{
-    if (!file_exists($filePath)) {
-        return [];
-    }
-    $lines = file($filePath, FILE_IGNORE_NEW_LINES);
-    return $lines === false ? [] : $lines;
-}
-
-function parseDelimitedRecord(string $line, string $pairDelimiter = '|'): array
-{
-    $record = [];
-    foreach (explode($pairDelimiter, $line) as $segment) {
-        $segment = trim($segment);
-        if ($segment === '') {
-            continue;
-        }
-
-        [$key, $value] = array_pad(explode(':', $segment, 2), 2, '');
-        $key = trim($key);
-        if ($key === '') {
-            continue;
-        }
-        $record[$key] = trim($value);
-    }
-
-    return $record;
-}
+require_once 'main.php';
 
 function req($value): bool
 {
@@ -85,51 +30,23 @@ function valuesMatch($a, $b): bool
     return $a === $b;
 }
 
-function userDataDirectory(): string
+function uniqueEmailDB(string $email): bool
 {
-    $xamppRoot = dirname(__DIR__, 3);
-    $directory = $xamppRoot . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'User';
-    if (!is_dir($directory)) {
-        mkdir($directory, 0775, true);
-    }
-    return $directory;
-}
-
-function userDataPath(): string
-{
-    return userDataDirectory() . DIRECTORY_SEPARATOR . 'user.txt';
-}
-
-function uniqueEmail(string $email, string $pathToUserFile): bool
-{
-    if (!file_exists($pathToUserFile)) {
-        return true;
-    }
-
-    $lines = file($pathToUserFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if (!$lines) {
-        return true;
-    }
-
-    foreach ($lines as $line) {
-        $record = parseDelimitedRecord($line);
-        if (!array_key_exists('Email', $record)) {
-            continue;
-        }
-        if (strcasecmp($record['Email'], $email) === 0) {
-            return false;
-        }
-    }
-
-    return true;
+    $conn = getDBConnection();
+    $stmt = $conn->prepare("SELECT email FROM user_table WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $exists = $result->num_rows > 0;
+    $stmt->close();
+    $conn->close();
+    return !$exists;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: registration.php');
     exit;
 }
-
-$userFile = userDataPath();
 
 $values = [
     'first_name'       => trim($_POST['first_name'] ?? ''),
@@ -189,7 +106,7 @@ if (!req($values['confirm_password'])) {
     $addError('confirm_password', 'Password and confirm password do not match.');
 }
 
-if (!isset($errors['email']) && !uniqueEmail($values['email'], $userFile)) {
+if (!isset($errors['email']) && !uniqueEmailDB($values['email'])) {
     $addError('email', 'This email is already registered.');
 }
 
@@ -202,25 +119,44 @@ if (!empty($errors)) {
     exit;
 }
 
-ensureDir(dirname($userFile));
-
-$dobFormatted = $values['dob'];
-if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dobFormatted)) {
-    $dobFormatted = date('d-m-Y', strtotime($dobFormatted));
+// Save to database
+try {
+    $conn = getDBConnection();
+    
+    // Start transaction
+    $conn->begin_transaction();
+    
+    // Insert into user_table
+    $stmt = $conn->prepare("INSERT INTO user_table (email, first_name, last_name, dob, gender, hometown, profile_image) VALUES (?, ?, ?, ?, ?, ?, NULL)");
+    $stmt->bind_param("ssssss", $values['email'], $values['first_name'], $values['last_name'], $values['dob'], $values['gender'], $values['hometown']);
+    $stmt->execute();
+    $stmt->close();
+    
+    // Hash password and insert into account_table
+    $hashedPassword = password_hash($values['password'], PASSWORD_DEFAULT);
+    $stmt = $conn->prepare("INSERT INTO account_table (email, password, type) VALUES (?, ?, 'user')");
+    $stmt->bind_param("ss", $values['email'], $hashedPassword);
+    $stmt->execute();
+    $stmt->close();
+    
+    // Commit transaction
+    $conn->commit();
+    $conn->close();
+    
+    unset($_SESSION['register_errors'], $_SESSION['register_values']);
+    
+    header('Location: login.php?registered=1');
+    exit;
+    
+} catch (Exception $e) {
+    if (isset($conn)) {
+        $conn->rollback();
+        $conn->close();
+    }
+    $addError('general', 'Registration failed. Please try again.');
+    $_SESSION['register_errors'] = $errors;
+    $_SESSION['register_values'] = $values;
+    header('Location: registration.php');
+    exit;
 }
-
-$record = 'First Name:' . $values['first_name']
-        . '|Last Name:' . $values['last_name']
-        . '|DOB:' . $dobFormatted
-        . '|Gender:' . $values['gender']
-        . '|Email:' . $values['email']
-        . '|Hometown:' . $values['hometown']
-        . '|Password:' . $values['password'];
-
-appendLine($userFile, $record);
-
-unset($_SESSION['register_errors'], $_SESSION['register_values']);
-
-header('Location: login.php?registered=1');
-exit;
 
