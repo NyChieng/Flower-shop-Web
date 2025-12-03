@@ -26,9 +26,9 @@
     <section class="rf-section" aria-labelledby="about-assignment">
       <header class="rf-section-header text-center">
         <h1 id="about-assignment" class="rf-section-title display-5 mb-3">
-          <i class="bi bi-info-circle-fill text-danger me-2"></i>Assignment 2 Report
+          <i class="bi bi-info-circle-fill text-danger me-2"></i>About This Assignment
         </h1>
-        <p class="rf-section-text lead">Root Flowers - A comprehensive flower shop web application with MySQL database integration and admin functionality</p>
+        <p class="rf-section-text lead">Root Flowers - A modern flower shop web application with MySQL database and admin features</p>
       </header>
     </section>
 
@@ -36,50 +36,40 @@
       <div class="rf-card">
         <div class="rf-card-body">
           <div class="d-flex align-items-center gap-2 mb-4">
-            <i class="bi bi-question-circle-fill text-danger" style="font-size: 2rem;"></i>
-            <h2 id="assignment-questions" class="rf-card-title mb-0">Assignment Reflection</h2>
+            <i class="bi bi-list-check text-danger" style="font-size: 2rem;"></i>
+            <h2 id="assignment-questions" class="rf-card-title mb-0">What I Completed</h2>
           </div>
           
           <div class="mb-4">
-            <h4 class="text-primary"><i class="bi bi-check-circle me-2"></i>What tasks have you not attempted or not completed?</h4>
+            <h4 class="text-primary"><i class="bi bi-check-circle me-2"></i>All Core Requirements</h4>
             <ul class="rf-bullet-list">
-              <li>All core tasks have been completed including database integration, user authentication, admin portal, and flower identification system</li>
-              <li>All required tables (user_table, account_table, flower_table, workshop_table, studentwork_table) have been implemented</li>
-              <li>Admin functionality for managing users, student works, and workshop registrations is fully functional</li>
+              <li>✅ Complete database migration from text files to MySQL</li>
+              <li>✅ User registration and login with password hashing</li>
+              <li>✅ Admin portal for managing users, workshops, and student works</li>
+              <li>✅ Profile update with image and resume upload</li>
+              <li>✅ Flower identification system with search functionality</li>
+              <li>✅ All 5 database tables properly created with relationships</li>
             </ul>
           </div>
 
           <div class="mb-4">
-            <h4 class="text-primary"><i class="bi bi-exclamation-triangle me-2"></i>Which parts did you have trouble with?</h4>
+            <h4 class="text-primary"><i class="bi bi-exclamation-triangle me-2"></i>Challenges I Faced</h4>
             <ul class="rf-bullet-list">
-              <li>Implementing cascading deletes between user_table and account_table using foreign key constraints</li>
-              <li>Handling file uploads for profile images while maintaining proper file size validation (5MB limit)</li>
-              <li>Managing session states for admin vs regular users and proper redirection logic</li>
-              <li>Implementing the approve/reject status management with proper button state controls</li>
+              <li>🔧 Setting up foreign key constraints between tables</li>
+              <li>🔧 Managing file uploads with proper validation (5MB images, 7MB PDFs)</li>
+              <li>🔧 Creating separate navigation for admin vs regular users</li>
+              <li>🔧 Implementing approve/reject status system with proper button states</li>
             </ul>
           </div>
 
           <div class="mb-4">
-            <h4 class="text-primary"><i class="bi bi-lightbulb me-2"></i>What would you like to do better next time?</h4>
+            <h4 class="text-primary"><i class="bi bi-star me-2"></i>Extra Features Added</h4>
             <ul class="rf-bullet-list">
-              <li>Implement more robust error handling with try-catch blocks throughout the application</li>
-              <li>Add input sanitization and prepared statements more consistently to prevent SQL injection</li>
-              <li>Create a more modular code structure with separate files for database functions</li>
-              <li>Implement pagination for admin management pages when dealing with large datasets</li>
-              <li>Add email notifications for workshop registration approvals/rejections</li>
-              <li>Enhance the UI with more interactive elements and AJAX for dynamic updates</li>
-            </ul>
-          </div>
-
-          <div class="mb-4">
-            <h4 class="text-primary"><i class="bi bi-star me-2"></i>What extension features/extra challenges have you done, or attempted, when creating the site?</h4>
-            <ul class="rf-bullet-list">
-              <li><strong>Flower Identification System:</strong> Created a search-based flower database with PDF descriptions (Task 5.1)</li>
-              <li><strong>Admin Portal Design:</strong> Implemented a custom dark-themed admin interface with glassmorphism effects</li>
-              <li><strong>Password Hashing:</strong> Used PHP's password_hash() and password_verify() for secure password storage</li>
-              <li><strong>Profile Image Upload:</strong> Implemented file upload functionality with validation for profile customization</li>
-              <li><strong>Status Management:</strong> Dynamic button states based on approval status (pending/approved/rejected)</li>
-              <li><strong>Responsive Design:</strong> Fully responsive layout using Bootstrap 5.3.3 with custom CSS enhancements</li>
+              <li>⭐ Modern UI with Bootstrap 5.3.3 and custom animations</li>
+              <li>⭐ Dark-themed admin portal with glassmorphism design</li>
+              <li>⭐ Responsive design that works on mobile, tablet, and desktop</li>
+              <li>⭐ Dynamic navigation that changes based on user role (admin/user)</li>
+              <li>⭐ Profile image preview and gender-based default avatars</li>
             </ul>
           </div>
         </div>
@@ -91,16 +81,24 @@
         <div class="rf-card-body">
           <div class="d-flex align-items-center gap-2 mb-3">
             <i class="bi bi-gear-fill text-danger" style="font-size: 2rem;"></i>
-            <h2 id="system-details" class="rf-card-title mb-0">Technical Implementation</h2>
+            <h2 id="system-details" class="rf-card-title mb-0">Technologies Used</h2>
           </div>
-          <ul class="rf-bullet-list">
-            <li><strong><i class="bi bi-code-slash me-2"></i>PHP version:</strong> <?php echo htmlspecialchars(PHP_VERSION); ?></li>
-            <li><strong><i class="bi bi-database me-2"></i>Database:</strong> MySQL (RootFlower database with 5 tables)</li>
-            <li><strong><i class="bi bi-palette me-2"></i>Front-end Framework:</strong> Bootstrap 5.3.3 with custom CSS3 animations</li>
-            <li><strong><i class="bi bi-file-earmark-code me-2"></i>Icons Library:</strong> Bootstrap Icons 1.13.1</li>
-            <li><strong><i class="bi bi-shield-check me-2"></i>Security:</strong> Password hashing, prepared statements, session management</li>
-            <li><strong><i class="bi bi-person-badge me-2"></i>User Types:</strong> Regular users and admin with different access levels</li>
-          </ul>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <ul class="rf-bullet-list">
+                <li><strong><i class="bi bi-code-slash me-2"></i>Backend:</strong> PHP <?php echo htmlspecialchars(PHP_VERSION); ?></li>
+                <li><strong><i class="bi bi-database me-2"></i>Database:</strong> MySQL (RootFlower)</li>
+                <li><strong><i class="bi bi-shield-check me-2"></i>Security:</strong> Password hashing, SQL prepared statements</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <ul class="rf-bullet-list">
+                <li><strong><i class="bi bi-palette me-2"></i>Frontend:</strong> Bootstrap 5.3.3 + Custom CSS</li>
+                <li><strong><i class="bi bi-file-earmark-code me-2"></i>Icons:</strong> Bootstrap Icons 1.13.1</li>
+                <li><strong><i class="bi bi-person-badge me-2"></i>Users:</strong> Admin and Regular User roles</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -110,49 +108,45 @@
         <div class="rf-card-body">
           <div class="d-flex align-items-center gap-2 mb-3">
             <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
-            <h2 id="tasks-completed" class="rf-card-title mb-0">Pages Implemented - Assignment 2</h2>
+            <h2 id="tasks-completed" class="rf-card-title mb-0">Website Features</h2>
           </div>
           <div class="row g-3">
             <div class="col-md-6">
-              <h5 class="text-primary">Database & Authentication</h5>
+              <h5 class="text-primary"><i class="bi bi-person me-2"></i>User Features</h5>
               <ul class="rf-bullet-list">
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>main.php:</strong> Database connection and table creation</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Registration:</strong> Save to MySQL with password hashing</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Login:</strong> Validate against database, admin/user routing</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Profile Page:</strong> Display user data from database</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Update Profile:</strong> Edit user info with file uploads</li>
+                <li>Register and login securely</li>
+                <li>Update profile with photo and resume</li>
+                <li>Browse products and workshops</li>
+                <li>Search for flower information</li>
+                <li>View student work gallery</li>
               </ul>
               
-              <h5 class="text-primary mt-4">User Features</h5>
+              <h5 class="text-primary mt-4"><i class="bi bi-database me-2"></i>Database</h5>
               <ul class="rf-bullet-list">
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Main Menu:</strong> Navigation for regular users</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Products:</strong> Browse flower products</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Workshops:</strong> View workshop information</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Student Works:</strong> Gallery of submissions</li>
+                <li>user_table - User profiles</li>
+                <li>account_table - Login credentials</li>
+                <li>flower_table - Flower information</li>
+                <li>workshop_table - Workshop registrations</li>
+                <li>studentwork_table - Student submissions</li>
               </ul>
             </div>
             <div class="col-md-6">
-              <h5 class="text-primary">Admin Portal</h5>
+              <h5 class="text-primary"><i class="bi bi-shield-lock me-2"></i>Admin Features</h5>
               <ul class="rf-bullet-list">
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Admin Main Menu:</strong> Dark-themed admin dashboard</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Manage Accounts:</strong> Add, edit, delete users</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Manage Student Works:</strong> Approve/reject submissions</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Manage Workshop Reg:</strong> Approve/reject registrations</li>
+                <li>Manage user accounts (add/edit/delete)</li>
+                <li>Approve/reject workshop registrations</li>
+                <li>Approve/reject student work submissions</li>
+                <li>Manage flower database entries</li>
+                <li>View statistics and reports</li>
               </ul>
               
-              <h5 class="text-primary mt-4">Extension Features</h5>
+              <h5 class="text-primary mt-4"><i class="bi bi-palette me-2"></i>Design</h5>
               <ul class="rf-bullet-list">
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>Flower Identification:</strong> Search flowers by name</li>
-                <li><i class="bi bi-check2 text-success me-2"></i><strong>About Page:</strong> Assignment report and reflections</li>
-              </ul>
-              
-              <h5 class="text-primary mt-4">Database Tables</h5>
-              <ul class="rf-bullet-list">
-                <li><i class="bi bi-database me-2"></i>user_table (with profile images)</li>
-                <li><i class="bi bi-database me-2"></i>account_table (with foreign key)</li>
-                <li><i class="bi bi-database me-2"></i>flower_table</li>
-                <li><i class="bi bi-database me-2"></i>workshop_table</li>
-                <li><i class="bi bi-database me-2"></i>studentwork_table</li>
+                <li>Clean, modern interface</li>
+                <li>Responsive for all screen sizes</li>
+                <li>Easy navigation</li>
+                <li>Smooth animations</li>
+                <li>Professional flower theme</li>
               </ul>
             </div>
           </div>
@@ -165,34 +159,32 @@
         <div class="rf-card-body">
           <div class="d-flex align-items-center gap-2 mb-3">
             <i class="bi bi-link-45deg text-danger" style="font-size: 2rem;"></i>
-            <h2 id="resources" class="rf-card-title mb-0">Links & Navigation</h2>
+            <h2 id="resources" class="rf-card-title mb-0">Quick Links</h2>
           </div>
           <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <a href="index.php" class="btn btn-dark w-100">
-                <i class="bi bi-house me-2"></i>Homepage
+                <i class="bi bi-house me-2"></i>Home
               </a>
             </div>
-            <div class="col-md-4">
-              <a href="flower.php" class="btn btn-primary w-100">
-                <i class="bi bi-flower1 me-2"></i>Flower Identification
-              </a>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <a href="profile.php" class="btn btn-outline-dark w-100">
-                <i class="bi bi-person-circle me-2"></i>Profile
+                <i class="bi bi-person-circle me-2"></i>Student Profile
+              </a>
+            </div>
+            <div class="col-md-3">
+              <a href="main_menu.php" class="btn btn-primary w-100">
+                <i class="bi bi-grid me-2"></i>Main Menu
+              </a>
+            </div>
+            <div class="col-md-3">
+              <a href="flower.php" class="btn btn-success w-100">
+                <i class="bi bi-flower1 me-2"></i>Flower Search
               </a>
             </div>
           </div>
-          <div class="mt-4 p-3 bg-white rounded border">
-            <h6 class="fw-bold mb-2"><i class="bi bi-bookmark-star me-2"></i>Design Highlights:</h6>
-            <ul class="mb-0" style="font-size: 0.9rem;">
-              <li>🎨 Custom flower-themed color palette with soft pinks and elegant accents</li>
-              <li>✨ Smooth CSS animations and hover effects for enhanced user experience</li>
-              <li>📱 Fully responsive design using Bootstrap grid system</li>
-              <li>♿ Accessible navigation with ARIA labels and semantic HTML</li>
-              <li>🌸 Icon-rich interface using Bootstrap Icons library</li>
-            </ul>
+          <div class="mt-4 p-3 bg-white rounded border text-center">
+            <p class="mb-0 text-muted">🌸 Created by Neng Yi Chieng | Student ID: 104386364 | December 2025</p>
           </div>
         </div>
       </div>

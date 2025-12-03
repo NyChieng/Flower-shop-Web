@@ -293,7 +293,7 @@ $imageSrc = profileImagePath($values['gender'] ?? null, $originalRecord['profile
       </header>
     </section>
 
-    <?php if (isset($errorMessage)): ?>
+    <?php if (!empty($errorMessage)): ?>
       <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></div>
     <?php else: ?>
       <?php if ($success): ?>

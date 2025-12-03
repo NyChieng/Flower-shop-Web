@@ -4,12 +4,28 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 $isLoggedIn = !empty($_SESSION['user_email']);
-$navLinks = [
-    ['label' => 'Products',         'href' => 'products.php',     'requiresLogin' => true],
-    ['label' => 'Workshops',        'href' => 'workshops.php',    'requiresLogin' => true],
-    ['label' => 'Student Works',    'href' => 'studentworks.php', 'requiresLogin' => true],
-    ['label' => 'Flower Identifier', 'href' => 'flower.php',       'requiresLogin' => true],
-];
+$isAdmin = ($_SESSION['user_type'] ?? 'user') === 'admin';
+
+// Check if current page is an admin page
+$currentPage = basename($_SERVER['PHP_SELF']);
+$isAdminPage = in_array($currentPage, ['manage_accounts.php', 'manage_flowers.php', 'manage_studentwork.php', 'manage_workshop_reg.php', 'main_menu_admin.php']);
+
+// Admin pages get different nav links
+if ($isAdmin && $isAdminPage) {
+    $navLinks = [
+        ['label' => 'Manage Accounts',   'href' => 'manage_accounts.php',     'requiresLogin' => true],
+        ['label' => 'Manage Flowers',    'href' => 'manage_flowers.php',      'requiresLogin' => true],
+        ['label' => 'Manage Workshops',  'href' => 'manage_workshop_reg.php', 'requiresLogin' => true],
+        ['label' => 'Manage Gallery',    'href' => 'manage_studentwork.php',  'requiresLogin' => true],
+    ];
+} else {
+    $navLinks = [
+        ['label' => 'Products',          'href' => 'products.php',     'requiresLogin' => true],
+        ['label' => 'Workshops',         'href' => 'workshops.php',    'requiresLogin' => true],
+        ['label' => 'Student Works',     'href' => 'studentworks.php', 'requiresLogin' => true],
+        ['label' => 'Flower Identifier', 'href' => 'flower.php',       'requiresLogin' => true],
+    ];
+}
 ?>
 <nav class="navbar navbar-expand-lg navbar-light navbar-floral shadow-sm sticky-top" aria-label="Root Flowers navigation">
   <div class="container">
@@ -37,6 +53,10 @@ $navLinks = [
             case 'Workshops': $icon = 'calendar-event'; break;
             case 'Student Works': $icon = 'images'; break;
             case 'Flower Identifier': $icon = 'flower1'; break;
+            case 'Manage Accounts': $icon = 'people'; break;
+            case 'Manage Flowers': $icon = 'flower1'; break;
+            case 'Manage Workshops': $icon = 'calendar-check'; break;
+            case 'Manage Gallery': $icon = 'images'; break;
           }
         ?>
           <li class="nav-item">
@@ -51,10 +71,16 @@ $navLinks = [
 
         <li class="nav-item ms-lg-1 d-flex gap-2 flex-wrap">
           <?php if ($isLoggedIn): ?>
-            <?php if (($_SESSION['user_type'] ?? 'user') === 'admin'): ?>
-              <a class="btn btn-dark btn-sm" href="main_menu_admin.php">
-                <i class="bi bi-shield-lock me-1"></i>Admin Portal
-              </a>
+            <?php if ($isAdmin): ?>
+              <?php if ($isAdminPage): ?>
+                <a class="btn btn-outline-primary btn-sm" href="main_menu.php">
+                  <i class="bi bi-house-door me-1"></i>User Portal
+                </a>
+              <?php else: ?>
+                <a class="btn btn-primary btn-sm" href="main_menu_admin.php">
+                  <i class="bi bi-shield-lock me-1"></i>Admin Portal
+                </a>
+              <?php endif; ?>
             <?php endif; ?>
             <a class="btn btn-outline-dark btn-sm" href="update_profile.php">
               <i class="bi bi-pencil-square me-1"></i>Edit Profile
