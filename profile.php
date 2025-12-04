@@ -16,6 +16,7 @@ $profile = [
     'name'       => 'Neng Yi Chieng',
     'student_id' => '104386364',
     'email'      => '104386364@student.swin.edu.my',
+    'video_link' => 'https://youtu.be/2qI93aep1Hk',
     'declaration'=> 'I declare that this assignment is my individual work. I have not worked collaboratively nor have I copied from any other student\'s work or from any other source. I have not engaged another party to complete this assignment. I am aware of the University\'s policy with regards to plagiarism. I have not allowed, and will not allow, anyone to copy my work with the intention of passing it off as his or her own work.',
 ];
 
@@ -102,39 +103,33 @@ $imageSrc = profileImagePath($currentGender, $currentProfileImage);
         <div class="rf-card-body">
           <div class="text-center mb-4">
             <div class="rf-profile-media">
-              <img src="<?php echo htmlspecialchars($imageSrc); ?>" alt="User profile" />
+              <img src="img/ny.jpg" alt="Neng Yi Chieng" />
             </div>
             <h2 class="h4 fw-bold text-dark mb-1">
-              <?php echo $currentUserRecord ? htmlspecialchars($currentUserRecord['first_name'] . ' ' . $currentUserRecord['last_name']) : 'User'; ?>
+              <?php echo htmlspecialchars($profile['name']); ?>
             </h2>
             <p class="text-muted mb-0">
               <i class="bi bi-envelope-fill me-1"></i>
-              <?php echo htmlspecialchars($currentUserEmail); ?>
+              <?php echo htmlspecialchars($profile['email']); ?>
             </p>
           </div>
 
           <div class="profile-info-section mb-4">
             <h3 class="h6 text-uppercase text-muted mb-3">
-              <i class="bi bi-info-circle me-2"></i>Personal Information
-            </h3>
-            <ul class="rf-profile-list">
-              <li><strong>First Name:</strong> <?php echo $currentUserRecord ? htmlspecialchars($currentUserRecord['first_name']) : 'N/A'; ?></li>
-              <li><strong>Last Name:</strong> <?php echo $currentUserRecord ? htmlspecialchars($currentUserRecord['last_name']) : 'N/A'; ?></li>
-              <li><strong>Date of Birth:</strong> <?php echo $currentUserRecord && $currentUserRecord['dob'] ? htmlspecialchars($currentUserRecord['dob']) : 'N/A'; ?></li>
-              <li><strong>Gender:</strong> <?php echo $currentUserRecord ? htmlspecialchars($currentUserRecord['gender']) : 'N/A'; ?></li>
-              <li><strong>Hometown:</strong> <?php echo $currentUserRecord && $currentUserRecord['hometown'] ? htmlspecialchars($currentUserRecord['hometown']) : 'N/A'; ?></li>
-            </ul>
-          </div>
-
-          <div class="profile-info-section mb-4">
-            <h3 class="h6 text-uppercase text-muted mb-3">
-              <i class="bi bi-person-badge me-2"></i>Developer Information
+              <i class="bi bi-person-badge me-2"></i>Student Information
             </h3>
             <ul class="rf-profile-list">
               <li><strong>Name:</strong> <?php echo htmlspecialchars($profile['name']); ?></li>
               <li><strong>Student ID:</strong> <?php echo htmlspecialchars($profile['student_id']); ?></li>
               <li><strong>Email:</strong> <a href="mailto:<?php echo htmlspecialchars($profile['email']); ?>"><?php echo htmlspecialchars($profile['email']); ?></a></li>
+              <li><strong>Video Presentation:</strong> <a href="<?php echo htmlspecialchars($profile['video_link']); ?>" target="_blank" rel="noopener noreferrer"><i class="bi bi-play-circle me-1"></i>Watch Presentation</a></li>
             </ul>
+          </div>
+
+          <div class="profile-info-section mb-4">
+            <h3 class="h6 text-uppercase text-muted mb-3">
+              <i class="bi bi-file-text me-2"></i>Academic Declaration
+            </h3>
           </div>
 
           <blockquote class="rf-profile-declaration">
@@ -143,8 +138,8 @@ $imageSrc = profileImagePath($currentGender, $currentProfileImage);
           </blockquote>
 
           <div class="rf-profile-actions">
-            <a class="rf-button" href="update_profile.php">
-              <i class="bi bi-pencil me-2"></i>Edit Profile
+            <a class="rf-button" href="about.php">
+              <i class="bi bi-info-circle me-2"></i>About Assignment
             </a>
             <a class="rf-button rf-button-outline" href="main_menu.php">
               <i class="bi bi-house me-2"></i>Main Menu

@@ -199,8 +199,8 @@ try {
                       </span>
                     </td>
                     <td>
-                      <div class="btn-group btn-group-sm">
-                        <?php if ($flower['status'] !== 'approved'): ?>
+                      <div class="d-flex gap-1">
+                        <?php if ($flower['status'] === 'pending'): ?>
                           <form method="post" style="display:inline;">
                             <input type="hidden" name="flower_id" value="<?php echo $flower['id']; ?>">
                             <input type="hidden" name="action" value="approve">
@@ -208,9 +208,22 @@ try {
                               <i class="bi bi-check-lg"></i>
                             </button>
                           </form>
-                        <?php endif; ?>
-                        
-                        <?php if ($flower['status'] !== 'rejected'): ?>
+                          <form method="post" style="display:inline;">
+                            <input type="hidden" name="flower_id" value="<?php echo $flower['id']; ?>">
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn btn-warning btn-sm" title="Reject">
+                              <i class="bi bi-x-lg"></i>
+                            </button>
+                          </form>
+                        <?php elseif ($flower['status'] === 'rejected'): ?>
+                          <form method="post" style="display:inline;" onsubmit="return confirm('Delete this flower permanently?');">
+                            <input type="hidden" name="flower_id" value="<?php echo $flower['id']; ?>">
+                            <input type="hidden" name="action" value="delete">
+                            <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </form>
+                        <?php elseif ($flower['status'] === 'approved'): ?>
                           <form method="post" style="display:inline;">
                             <input type="hidden" name="flower_id" value="<?php echo $flower['id']; ?>">
                             <input type="hidden" name="action" value="reject">
@@ -219,14 +232,6 @@ try {
                             </button>
                           </form>
                         <?php endif; ?>
-                        
-                        <form method="post" style="display:inline;" onsubmit="return confirm('Delete this flower permanently?');">
-                          <input type="hidden" name="flower_id" value="<?php echo $flower['id']; ?>">
-                          <input type="hidden" name="action" value="delete">
-                          <button type="submit" class="btn btn-danger btn-sm" title="Delete">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </form>
                         
                         <?php if ($flower['Description'] && file_exists($flower['Description'])): ?>
                           <a href="<?php echo htmlspecialchars($flower['Description']); ?>" 

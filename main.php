@@ -96,7 +96,7 @@ function createTables(): void {
         time TIME NULL,
         contact_number VARCHAR(15) NULL,
         status VARCHAR(10) DEFAULT 'pending',
-        FOREIGN KEY (email) REFERENCES user_table(email)
+        FOREIGN KEY (email) REFERENCES user_table(email) ON DELETE CASCADE ON UPDATE CASCADE
     )";
     
     if (!$conn->query($workshopTable)) {
@@ -112,7 +112,7 @@ function createTables(): void {
         workshop_image VARCHAR(100) NULL,
         workshop_title VARCHAR(50) NOT NULL,
         status VARCHAR(10) DEFAULT 'pending',
-        FOREIGN KEY (email) REFERENCES user_table(email)
+        FOREIGN KEY (email) REFERENCES user_table(email) ON DELETE CASCADE ON UPDATE CASCADE
     )";
     
     if (!$conn->query($studentworkTable)) {

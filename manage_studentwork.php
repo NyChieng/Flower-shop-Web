@@ -175,66 +175,48 @@ try {
                         </span>
                       </td>
                       <td>
-                        <div class="btn-group" role="group">
+                        <div class="d-flex gap-1 flex-nowrap" style="min-width: 200px;">
                         <?php if ($work['status'] === 'pending'): ?>
-                          <button class="btn btn-sm btn-success" 
+                          <button class="btn btn-success btn-sm" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
                                   data-action="approve"
                                   data-id="<?php echo $work['id']; ?>"
                                   data-name="<?php echo htmlspecialchars($work['first_name'] . ' ' . $work['last_name']); ?>"
                                   title="Approve submission">
-                            <i class="bi bi-check-circle me-1"></i><span class="d-none d-lg-inline">Approve</span>
+                            <i class="bi bi-check-circle"></i> Approve
                           </button>
-                          <button class="btn btn-sm btn-danger" 
+                          <button class="btn btn-warning btn-sm" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
                                   data-action="reject"
                                   data-id="<?php echo $work['id']; ?>"
                                   data-name="<?php echo htmlspecialchars($work['first_name'] . ' ' . $work['last_name']); ?>"
                                   title="Reject submission">
-                            <i class="bi bi-x-circle me-1"></i><span class="d-none d-lg-inline">Reject</span>
+                            <i class="bi bi-x-circle"></i> Reject
                           </button>
-                        <?php elseif ($work['status'] === 'approved'): ?>
-                          <button class="btn btn-sm btn-danger" 
+                        <?php elseif ($work['status'] === 'rejected'): ?>
+                          <button class="btn btn-danger btn-sm" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
-                                  data-action="reject"
+                                  data-action="delete"
                                   data-id="<?php echo $work['id']; ?>"
                                   data-name="<?php echo htmlspecialchars($work['first_name'] . ' ' . $work['last_name']); ?>"
-                                  title="Reject submission">
-                            <i class="bi bi-x-circle me-1"></i><span class="d-none d-lg-inline">Reject</span>
+                                  title="Delete submission">
+                            <i class="bi bi-trash"></i> Delete
                           </button>
                         <?php else: ?>
-                          <button class="btn btn-sm btn-success" 
+                          <button class="btn btn-warning btn-sm" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
-                                  data-action="approve"
+                                  data-action="reject"
                                   data-id="<?php echo $work['id']; ?>"
                                   data-name="<?php echo htmlspecialchars($work['first_name'] . ' ' . $work['last_name']); ?>"
-                                  title="Approve submission">
-                            <i class="bi bi-check-circle me-1"></i><span class="d-none d-lg-inline">Approve</span>
+                                  title="Reject submission">
+                            <i class="bi bi-x-circle"></i> Reject
                           </button>
                         <?php endif; ?>
-                        <button class="btn btn-sm btn-outline-secondary" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#confirmModal"
-                                data-action="delete"
-                                data-id="<?php echo $work['id']; ?>"
-                                data-name="<?php echo htmlspecialchars($work['first_name'] . ' ' . $work['last_name']); ?>"
-                                title="Delete submission">
-                          <i class="bi bi-trash"></i><span class="d-none d-lg-inline ms-1">Delete</span>
-                        </button>
                         </div>
-                        
-                        <button class="btn btn-sm btn-secondary" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#confirmModal"
-                                data-action="delete"
-                                data-id="<?php echo $work['id']; ?>"
-                                data-name="<?php echo htmlspecialchars($work['first_name'] . ' ' . $work['last_name']); ?>">
-                          <i class="bi bi-trash"></i> Delete
-                        </button>
                       </td>
                     </tr>
                   <?php endforeach; ?>

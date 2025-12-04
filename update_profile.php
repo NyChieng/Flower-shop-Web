@@ -174,6 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $originalRecord) {
 
     // Handle profile image upload
     $profileImagePath = $originalRecord['profile_image'];
+    
+    // Check if user uploaded a new image
     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
         $allowed = ['jpg', 'jpeg', 'png', 'gif'];
         $filename = $_FILES['profile_image']['name'];
@@ -186,8 +188,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $originalRecord) {
         } else {
             $uploadDir = __DIR__ . '/profile_images/';
             ensureDir($uploadDir);
-            $newFilename = 'profile_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            // Use user's first name for profile image
+            $baseName = strtolower(str_replace(' ', '', $values['first_name']));
+            $baseName = preg_replace('/[^a-z0-9]/', '', $baseName);
+            if (empty($baseName)) {
+                $baseName = 'user';
+            }
+            $newFilename = $baseName . '.' . $ext;
             $uploadPath = $uploadDir . $newFilename;
+            
+            // If file exists, add timestamp
+            if (file_exists($uploadPath)) {
+                $newFilename = $baseName . '_' . time() . '.' . $ext;
+                $uploadPath = $uploadDir . $newFilename;
+            }
             
             if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
                 $profileImagePath = 'profile_images/' . $newFilename;
@@ -195,6 +209,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $originalRecord) {
                 $addError('profile_image', 'Failed to upload profile image.');
             }
         }
+    } else {
+        // No new image uploaded - check if we should use gender-based default
+        // If current image is a default avatar, update it based on new gender
+        $currentImage = $originalRecord['profile_image'] ?? '';
+        $isDefaultImage = in_array($currentImage, ['profile_images/boys.jpg', 'profile_images/girl.png', '']) || empty($currentImage);
+        
+        if ($isDefaultImage) {
+            // Use gender-based default avatar
+            $profileImagePath = ($values['gender'] === 'Male') ? 'profile_images/boys.jpg' : 'profile_images/girl.png';
+        }
+        // Otherwise keep the existing custom uploaded image
     }
 
     // Handle resume upload (PDF, max 7MB)
@@ -211,8 +236,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $originalRecord) {
         } else {
             $uploadDir = __DIR__ . '/resume/';
             ensureDir($uploadDir);
-            $newFilename = 'resume_' . time() . '_' . bin2hex(random_bytes(4)) . '.pdf';
+            // Use user's name for resume
+            $baseName = strtolower($values['first_name'] . '_' . $values['last_name']);
+            $baseName = preg_replace('/[^a-z0-9_]/', '', $baseName);
+            $newFilename = $baseName . '_resume.pdf';
             $uploadPath = $uploadDir . $newFilename;
+            
+            // If file exists, add timestamp
+            if (file_exists($uploadPath)) {
+                $newFilename = $baseName . '_resume_' . time() . '.pdf';
+                $uploadPath = $uploadDir . $newFilename;
+            }
             
             if (move_uploaded_file($_FILES['resume']['tmp_name'], $uploadPath)) {
                 $resumePath = 'resume/' . $newFilename;
@@ -227,17 +261,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $originalRecord) {
             $conn = getDBConnection();
             $conn->begin_transaction();
             
-            // Update user_table
-            $stmt = $conn->prepare("UPDATE user_table SET first_name = ?, last_name = ?, dob = ?, gender = ?, hometown = ?, profile_image = ?, resume = ? WHERE email = ?");
-            $stmt->bind_param("ssssssss", $values['first_name'], $values['last_name'], $values['dob'], $values['gender'], $values['hometown'], $profileImagePath, $resumePath, $originalRecord['email']);
-            $stmt->execute();
+            // Ensure resume path is properly handled
+            if ($resumePath === null || $resumePath === '') {
+                $resumePath = $originalRecord['resume'] ?? '';
+            }
+            
+            // Check if resume column exists in user_table
+            $columnsResult = $conn->query("SHOW COLUMNS FROM user_table LIKE 'resume'");
+            $hasResumeColumn = ($columnsResult && $columnsResult->num_rows > 0);
+            
+            // Update user_table first (using original email)
+            if ($hasResumeColumn) {
+                $stmt = $conn->prepare("UPDATE user_table SET first_name = ?, last_name = ?, dob = ?, gender = ?, email = ?, hometown = ?, profile_image = ?, resume = ? WHERE email = ?");
+                if (!$stmt) {
+                    throw new Exception("Prepare failed: " . $conn->error);
+                }
+                $stmt->bind_param("sssssssss", $values['first_name'], $values['last_name'], $values['dob'], $values['gender'], $values['email'], $values['hometown'], $profileImagePath, $resumePath, $originalRecord['email']);
+            } else {
+                // Update without resume column
+                $stmt = $conn->prepare("UPDATE user_table SET first_name = ?, last_name = ?, dob = ?, gender = ?, email = ?, hometown = ?, profile_image = ? WHERE email = ?");
+                if (!$stmt) {
+                    throw new Exception("Prepare failed: " . $conn->error);
+                }
+                $stmt->bind_param("ssssssss", $values['first_name'], $values['last_name'], $values['dob'], $values['gender'], $values['email'], $values['hometown'], $profileImagePath, $originalRecord['email']);
+            }
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Execute failed: " . $stmt->error);
+            }
+            
             $stmt->close();
             
             // If email changed, update account_table too
             if (strcasecmp($values['email'], $originalRecord['email']) !== 0) {
                 $stmt = $conn->prepare("UPDATE account_table SET email = ? WHERE email = ?");
+                if (!$stmt) {
+                    throw new Exception("Prepare account_table failed: " . $conn->error);
+                }
                 $stmt->bind_param("ss", $values['email'], $originalRecord['email']);
-                $stmt->execute();
+                if (!$stmt->execute()) {
+                    throw new Exception("Execute account_table failed: " . $stmt->error);
+                }
                 $stmt->close();
             }
             
@@ -255,11 +319,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $originalRecord) {
             exit;
             
         } catch (Exception $e) {
-            if (isset($conn)) {
+            if (isset($conn) && $conn->connect_errno === 0) {
                 $conn->rollback();
                 $conn->close();
             }
-            $addError('general', 'Failed to update profile. Please try again.');
+            $addError('general', 'Failed to update profile: ' . $e->getMessage());
         }
     }
 }
@@ -293,11 +357,29 @@ $imageSrc = profileImagePath($values['gender'] ?? null, $originalRecord['profile
       </header>
     </section>
 
-    <?php if (isset($errorMessage)): ?>
+    <?php if (!empty($errorMessage)): ?>
       <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></div>
     <?php else: ?>
       <?php if ($success): ?>
-        <div class="alert alert-success" role="alert">Profile updated successfully.</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="bi bi-check-circle me-2"></i>Profile updated successfully!
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <?php endif; ?>
+
+      <?php if (!empty($errors)): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <strong>Please fix the following errors:</strong>
+          <ul class="mb-0 mt-2">
+            <?php foreach ($errors as $fieldErrors): ?>
+              <?php foreach ($fieldErrors as $error): ?>
+                <li><?php echo htmlspecialchars($error); ?></li>
+              <?php endforeach; ?>
+            <?php endforeach; ?>
+          </ul>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
       <?php endif; ?>
 
       <form class="rf-section rf-profile" method="post" action="update_profile.php" enctype="multipart/form-data" novalidate>
@@ -388,5 +470,34 @@ $imageSrc = profileImagePath($values['gender'] ?? null, $originalRecord['profile
   <?php include __DIR__ . '/footer.php'; ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Profile image preview
+    document.getElementById('profile_image')?.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          document.getElementById('profilePreview').src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Gender-based avatar update (if no custom image uploaded)
+    document.getElementById('gender')?.addEventListener('change', function(e) {
+      const profileImageInput = document.getElementById('profile_image');
+      const profilePreview = document.getElementById('profilePreview');
+      
+      // Only update if no file is selected
+      if (!profileImageInput.files || profileImageInput.files.length === 0) {
+        const gender = e.target.value.toLowerCase();
+        const avatars = {
+          'male': 'profile_images/boys.jpg',
+          'female': 'profile_images/girl.png'
+        };
+        profilePreview.src = avatars[gender] || avatars['female'];
+      }
+    });
+  </script>
 </body>
 </html>

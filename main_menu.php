@@ -14,6 +14,8 @@ if ($firstName === '') {
     $firstName = 'Friend';
 }
 
+$isAdmin = ($_SESSION['user_type'] ?? 'user') === 'admin';
+
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
@@ -76,7 +78,12 @@ $portalCards = [
           <i class="bi bi-flower1 me-1 text-danger"></i>Root Flowers
         </span>
       </a>
-      <div class="d-flex gap-2">
+      <div class="d-flex gap-2 flex-wrap">
+        <?php if ($isAdmin): ?>
+          <a class="btn btn-primary btn-sm" href="main_menu_admin.php">
+            <i class="bi bi-shield-lock me-2"></i>Admin Portal
+          </a>
+        <?php endif; ?>
         <a class="btn btn-outline-dark btn-sm" href="update_profile.php">
           <i class="bi bi-pencil me-2"></i>Edit Profile
         </a>

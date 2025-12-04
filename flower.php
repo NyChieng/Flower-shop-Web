@@ -34,23 +34,33 @@ if (isset($_FILES['identify_image']) && $_FILES['identify_image']['error'] === U
         } elseif ($_FILES['identify_image']['size'] > 5 * 1024 * 1024) {
             $message = 'Image size must not exceed 5MB.';
         } else {
-            // Save uploaded image temporarily
+            // Save uploaded image with original filename
             $uploadDir = __DIR__ . '/img/uploads/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0775, true);
             }
             
-            $newFilename = 'identify_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-            $uploadPath = $uploadDir . $newFilename;
+            // Keep original filename but make it safe
+            $safeFilename = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $filename);
+            $uploadPath = $uploadDir . $safeFilename;
+            
+            // If file exists, add number suffix
+            $counter = 1;
+            while (file_exists($uploadPath)) {
+                $name = pathinfo($safeFilename, PATHINFO_FILENAME);
+                $ext = pathinfo($safeFilename, PATHINFO_EXTENSION);
+                $safeFilename = $name . '_' . $counter . '.' . $ext;
+                $uploadPath = $uploadDir . $safeFilename;
+                $counter++;
+            }
             
             if (move_uploaded_file($_FILES['identify_image']['tmp_name'], $uploadPath)) {
-                $uploadedImagePath = 'img/uploads/' . $newFilename;
+                $uploadedImagePath = 'img/uploads/' . $safeFilename;
                 
-                // Extract keywords from original filename for matching
-                $imageName = strtolower(pathinfo($filename, PATHINFO_FILENAME));
-                
-                // Remove common separators and keep only the flower name
-                $imageName = str_replace(['_', '-', ' '], '', $imageName);
+                // Extract flower name from original filename (keep it simple)
+                $originalName = pathinfo($filename, PATHINFO_FILENAME);
+                // Replace separators with spaces for better matching
+                $searchName = str_replace(['_', '-'], ' ', $originalName);
                 
                 $conn = getDBConnection();
                 
@@ -66,19 +76,32 @@ if (isset($_FILES['identify_image']) && $_FILES['identify_image']['error'] === U
                 
                 // Search for matching flowers based on filename
                 // Look for approved flowers AND user's own contributions (even if pending)
+                // Remove spaces from both sides for better matching (sunflower matches "Sun Flower")
+                $searchNoSpace = str_replace(' ', '', $searchName);
+                
                 $stmt = $conn->prepare("
                     SELECT * FROM flower_table 
                     WHERE (
-                        LOWER(REPLACE(REPLACE(Common_Name, ' ', ''), '-', '')) LIKE CONCAT('%', ?, '%') 
-                        OR LOWER(REPLACE(REPLACE(Scientific_Name, ' ', ''), '-', '')) LIKE CONCAT('%', ?, '%')
+                        LOWER(Common_Name) LIKE CONCAT('%', LOWER(?), '%') 
+                        OR LOWER(Scientific_Name) LIKE CONCAT('%', LOWER(?), '%')
+                        OR REPLACE(LOWER(Common_Name), ' ', '') LIKE CONCAT('%', LOWER(?), '%')
+                        OR REPLACE(LOWER(Scientific_Name), ' ', '') LIKE CONCAT('%', LOWER(?), '%')
                     )
                     AND (status = 'approved' OR status IS NULL OR contributor_email = ?)
                     ORDER BY 
                         CASE WHEN status = 'approved' OR status IS NULL THEN 0 ELSE 1 END,
+                        CASE 
+                            WHEN REPLACE(LOWER(Common_Name), ' ', '') = LOWER(?) THEN 0
+                            WHEN REPLACE(LOWER(Scientific_Name), ' ', '') = LOWER(?) THEN 1
+                            WHEN LOWER(Common_Name) = LOWER(?) THEN 2
+                            WHEN LOWER(Scientific_Name) = LOWER(?) THEN 3
+                            ELSE 4
+                        END,
                         Common_Name
+                    LIMIT 10
                 ");
                 $userEmail = $_SESSION['user_email'];
-                $stmt->bind_param("sss", $imageName, $imageName, $userEmail);
+                $stmt->bind_param("sssssssss", $searchName, $searchName, $searchNoSpace, $searchNoSpace, $userEmail, $searchNoSpace, $searchNoSpace, $searchName, $searchName);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 
@@ -88,30 +111,7 @@ if (isset($_FILES['identify_image']) && $_FILES['identify_image']['error'] === U
                     }
                     $message = 'success';
                 } else {
-                    // Try a more flexible search without space removal
-                    $imageName2 = strtolower(pathinfo($filename, PATHINFO_FILENAME));
-                    $stmt2 = $conn->prepare("
-                        SELECT * FROM flower_table 
-                        WHERE (
-                            LOWER(Common_Name) LIKE CONCAT('%', ?, '%') 
-                            OR LOWER(Scientific_Name) LIKE CONCAT('%', ?, '%')
-                        )
-                        AND (status = 'approved' OR status IS NULL OR contributor_email = ?)
-                        ORDER BY Common_Name
-                    ");
-                    $stmt2->bind_param("sss", $imageName2, $imageName2, $userEmail);
-                    $stmt2->execute();
-                    $result2 = $stmt2->get_result();
-                    
-                    if ($result2->num_rows > 0) {
-                        while ($row = $result2->fetch_assoc()) {
-                            $flowers[] = $row;
-                        }
-                        $message = 'success';
-                    } else {
-                        $message = 'No matching flowers found. The uploaded image filename "' . htmlspecialchars($filename) . '" does not match any flowers in our database. Make sure your contributed flower has been approved by admin or the filename matches the flower name.';
-                    }
-                    $stmt2->close();
+                    $message = 'No matching flowers found for "' . htmlspecialchars($originalName) . '". Try uploading an image with the flower name in the filename (e.g., "rose.jpg", "sunflower.png"), or make sure your contributed flower has been approved by admin.';
                 }
                 
                 $stmt->close();
@@ -153,8 +153,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isLoggedIn) {
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0775, true);
             }
-            $newFilename = 'flower_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            // Use common name for filename
+            $baseName = strtolower(str_replace(' ', '_', $commonName));
+            $baseName = preg_replace('/[^a-z0-9_]/', '', $baseName);
+            $newFilename = $baseName . '.' . $ext;
             $uploadPath = $uploadDir . $newFilename;
+            
+            // If file exists, add timestamp
+            if (file_exists($uploadPath)) {
+                $newFilename = $baseName . '_' . time() . '.' . $ext;
+                $uploadPath = $uploadDir . $newFilename;
+            }
             
             if (move_uploaded_file($_FILES['flower_image']['tmp_name'], $uploadPath)) {
                 $imagePath = 'img/flowers/' . $newFilename;
@@ -181,8 +190,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isLoggedIn) {
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0775, true);
             }
-            $newFilename = 'description_' . time() . '_' . bin2hex(random_bytes(4)) . '.pdf';
+            // Use common name for PDF filename
+            $baseName = strtolower(str_replace(' ', '_', $commonName));
+            $baseName = preg_replace('/[^a-z0-9_]/', '', $baseName);
+            $newFilename = $baseName . '.pdf';
             $uploadPath = $uploadDir . $newFilename;
+            
+            // If file exists, add timestamp
+            if (file_exists($uploadPath)) {
+                $newFilename = $baseName . '_' . time() . '.pdf';
+                $uploadPath = $uploadDir . $newFilename;
+            }
             
             if (move_uploaded_file($_FILES['flower_pdf']['tmp_name'], $uploadPath)) {
                 $pdfPath = 'flower_description/' . $newFilename;
