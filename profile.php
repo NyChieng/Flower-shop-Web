@@ -16,7 +16,7 @@ $profile = [
     'name'       => 'Neng Yi Chieng',
     'student_id' => '104386364',
     'email'      => '104386364@student.swin.edu.my',
-    'video_link' => 'https://www.youtube.com/watch?v=YOUR_VIDEO_ID', // Replace with your actual video link
+    'video_link' => 'https://youtu.be/2qI93aep1Hk',
     'declaration'=> 'I declare that this assignment is my individual work. I have not worked collaboratively nor have I copied from any other student\'s work or from any other source. I have not engaged another party to complete this assignment. I am aware of the University\'s policy with regards to plagiarism. I have not allowed, and will not allow, anyone to copy my work with the intention of passing it off as his or her own work.',
 ];
 

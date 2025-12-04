@@ -15,8 +15,8 @@ if ($isAdmin && $isAdminPage) {
     $navLinks = [
         ['label' => 'Manage Accounts',   'href' => 'manage_accounts.php',     'requiresLogin' => true],
         ['label' => 'Manage Flowers',    'href' => 'manage_flowers.php',      'requiresLogin' => true],
+        ['label' => 'Manage Student Works', 'href' => 'manage_studentwork.php', 'requiresLogin' => true],
         ['label' => 'Manage Workshops',  'href' => 'manage_workshop_reg.php', 'requiresLogin' => true],
-        ['label' => 'Manage Gallery',    'href' => 'manage_studentwork.php',  'requiresLogin' => true],
     ];
 } else {
     $navLinks = [

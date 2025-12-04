@@ -273,7 +273,7 @@ try {
                                   title="Approve registration">
                             <i class="bi bi-check-circle"></i> Approve
                           </button>
-                          <button class="btn btn-danger btn-sm" 
+                          <button class="btn btn-warning btn-sm" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
                                   data-action="reject"
@@ -282,37 +282,27 @@ try {
                                   title="Reject registration">
                             <i class="bi bi-x-circle"></i> Reject
                           </button>
-                        <?php elseif ($reg['status'] === 'approved'): ?>
+                        <?php elseif ($reg['status'] === 'rejected'): ?>
                           <button class="btn btn-danger btn-sm" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
-                                  data-action="reject"
+                                  data-action="delete"
                                   data-id="<?php echo $reg['id']; ?>"
                                   data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>"
-                                  title="Reject registration">
-                            <i class="bi bi-x-circle"></i> Reject
+                                  title="Delete registration">
+                            <i class="bi bi-trash"></i> Delete
                           </button>
                         <?php else: ?>
-                          <button class="btn btn-success btn-sm" 
+                          <button class="btn btn-warning btn-sm" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
-                                  data-action="approve"
+                                  data-action="reject"
                                   data-id="<?php echo $reg['id']; ?>"
                                   data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>"
-                                  title="Approve registration">
-                            <i class="bi bi-check-circle"></i> Approve
+                                  title="Reject registration">
+                            <i class="bi bi-x-circle"></i> Reject
                           </button>
                         <?php endif; ?>
-                        
-                        <button class="btn btn-outline-secondary btn-sm" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#confirmModal"
-                                data-action="delete"
-                                data-id="<?php echo $reg['id']; ?>"
-                                data-name="<?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?>"
-                                title="Delete registration">
-                          <i class="bi bi-trash"></i> Delete
-                        </button>
                         </div>
                       </td>
                     </tr>

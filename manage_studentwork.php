@@ -186,7 +186,7 @@ try {
                                   title="Approve submission">
                             <i class="bi bi-check-circle"></i> Approve
                           </button>
-                          <button class="btn btn-danger btn-sm" 
+                          <button class="btn btn-warning btn-sm" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
                                   data-action="reject"
@@ -195,28 +195,8 @@ try {
                                   title="Reject submission">
                             <i class="bi bi-x-circle"></i> Reject
                           </button>
-                        <?php elseif ($work['status'] === 'approved'): ?>
+                        <?php elseif ($work['status'] === 'rejected'): ?>
                           <button class="btn btn-danger btn-sm" 
-                                  data-bs-toggle="modal" 
-                                  data-bs-target="#confirmModal"
-                                  data-action="reject"
-                                  data-id="<?php echo $work['id']; ?>"
-                                  data-name="<?php echo htmlspecialchars($work['first_name'] . ' ' . $work['last_name']); ?>"
-                                  title="Reject submission">
-                            <i class="bi bi-x-circle"></i> Reject
-                          </button>
-                        <?php else: ?>
-                          <button class="btn btn-success btn-sm" 
-                                  data-bs-toggle="modal" 
-                                  data-bs-target="#confirmModal"
-                                  data-action="approve"
-                                  data-id="<?php echo $work['id']; ?>"
-                                  data-name="<?php echo htmlspecialchars($work['first_name'] . ' ' . $work['last_name']); ?>"
-                                  title="Approve submission">
-                            <i class="bi bi-check-circle"></i> Approve
-                          </button>
-                        <?php endif; ?>
-                          <button class="btn btn-outline-secondary btn-sm" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#confirmModal"
                                   data-action="delete"
@@ -225,6 +205,17 @@ try {
                                   title="Delete submission">
                             <i class="bi bi-trash"></i> Delete
                           </button>
+                        <?php else: ?>
+                          <button class="btn btn-warning btn-sm" 
+                                  data-bs-toggle="modal" 
+                                  data-bs-target="#confirmModal"
+                                  data-action="reject"
+                                  data-id="<?php echo $work['id']; ?>"
+                                  data-name="<?php echo htmlspecialchars($work['first_name'] . ' ' . $work['last_name']); ?>"
+                                  title="Reject submission">
+                            <i class="bi bi-x-circle"></i> Reject
+                          </button>
+                        <?php endif; ?>
                         </div>
                       </td>
                     </tr>

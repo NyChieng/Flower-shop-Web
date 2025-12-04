@@ -154,6 +154,23 @@
       </div>
     </section>
 
+    <section class="rf-section" aria-labelledby="video-presentation">
+      <div class="rf-card" style="background: linear-gradient(135deg, #ffe5e5, #fff5f5);">
+        <div class="rf-card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-play-circle-fill text-danger" style="font-size: 2rem;"></i>
+            <h2 id="video-presentation" class="rf-card-title mb-0">Video Presentation</h2>
+          </div>
+          <div class="text-center">
+            <p class="mb-3">Watch the video presentation demonstrating the features and functionality of this assignment.</p>
+            <a href="https://youtu.be/2qI93aep1Hk" target="_blank" rel="noopener noreferrer" class="btn btn-danger btn-lg">
+              <i class="bi bi-play-circle me-2"></i>Watch Video Presentation
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="rf-section" aria-labelledby="resources">
       <div class="rf-card" style="background: linear-gradient(135deg, #fff9f6, #ffffff);">
         <div class="rf-card-body">
